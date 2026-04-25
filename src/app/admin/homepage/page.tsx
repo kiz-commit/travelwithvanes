@@ -36,13 +36,19 @@ export default function AdminHomePagePage() {
       setForm(mergeWithHomePageDefaults(raw));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
+      // Match public home: show editable defaults on failure (e.g. missing Firestore read rule).
+      setForm(mergeWithHomePageDefaults(null));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void load();
+    const frame = window.requestAnimationFrame(() => {
+      void load();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [load]);
 
   async function save() {
@@ -60,12 +66,16 @@ export default function AdminHomePagePage() {
     }
   }
 
-  if (loading || !form) {
+  if (loading) {
     return (
       <div className="flex justify-center py-12">
         <Loader2 className="size-8 animate-spin text-muted-foreground" />
       </div>
     );
+  }
+
+  if (!form) {
+    return null;
   }
 
   return (

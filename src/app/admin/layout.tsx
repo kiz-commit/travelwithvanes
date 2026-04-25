@@ -23,7 +23,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center pt-24">
+      <div className="flex min-h-screen items-center justify-center pt-32">
         <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
@@ -52,7 +52,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="pt-24">
+    <div className="pt-32">
       <nav className="border-b bg-muted/40">
         <div className="mx-auto flex h-12 max-w-7xl items-center gap-6 px-4">
           <span className="font-heading text-sm font-semibold tracking-wide">

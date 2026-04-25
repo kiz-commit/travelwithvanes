@@ -34,7 +34,7 @@ export default function ShopPage() {
   );
 
   return (
-    <main className="pt-24 pb-20 px-4">
+    <main className="pt-32 pb-20 px-4">
       <div className="mx-auto max-w-7xl">
         <div className="text-center">
           <h1 className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">
@@ -104,7 +104,7 @@ export default function ShopPage() {
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((product) => (
                 <Card key={product.id} className="overflow-hidden">
-                  <div className="aspect-square bg-gradient-to-br from-brazil-green/20 via-gold/20 to-sky/20" />
+                  <div className="aspect-square bg-gradient-to-br from-brazil-blue/20 via-sky/20 to-sand" />
                   <CardContent className="flex flex-col gap-3 pt-2">
                     <Badge variant="secondary" className="w-fit">
                       {product.category}

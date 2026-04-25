@@ -1,9 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
 import {
   Bold,
   Italic,
@@ -14,28 +14,53 @@ import {
   ListOrdered,
   Link as LinkIcon,
   ImageIcon,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TiptapEditorProps {
   content: string;
   onChange: (html: string) => void;
+  /** Smaller min height for titles and inline fields. */
+  compact?: boolean;
 }
 
-export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
+export function TiptapEditor({ content, onChange, compact }: TiptapEditorProps) {
+  const extensions = useMemo(
+    () => [
+      StarterKit.configure({
+        link: { openOnClick: false },
+      }),
       Image,
-      Link.configure({ openOnClick: false }),
     ],
-    content,
-    onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
-    },
-  });
+    []
+  );
 
-  if (!editor) return null;
+  const editor = useEditor(
+    {
+      // Required for Next.js; StarterKit in v3 already includes Link — configure it here only.
+      immediatelyRender: false,
+      extensions,
+      content,
+      onUpdate: ({ editor: ed }) => {
+        onChange(ed.getHTML());
+      },
+    },
+    []
+  );
+
+  if (!editor) {
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-center rounded-lg border border-input",
+          compact ? "min-h-[72px]" : "min-h-[120px]"
+        )}
+      >
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   function insertLink() {
     if (!editor) return;
@@ -133,7 +158,12 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
       </div>
       <EditorContent
         editor={editor}
-        className="prose prose-sm min-h-[120px] max-w-none px-3 py-2 text-sm focus-within:outline-none [&_.tiptap]:min-h-[100px] [&_.tiptap]:outline-none"
+        className={cn(
+          "prose prose-sm max-w-none px-3 py-2 text-sm focus-within:outline-none [&_.tiptap]:outline-none",
+          compact
+            ? "min-h-[72px] [&_.tiptap]:min-h-[56px]"
+            : "min-h-[120px] [&_.tiptap]:min-h-[100px]"
+        )}
       />
     </div>
   );

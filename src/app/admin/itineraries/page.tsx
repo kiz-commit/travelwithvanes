@@ -10,10 +10,9 @@ import {
 } from "@/lib/firestore";
 import { MediaUploadField } from "@/components/admin/media-upload-field";
 import { fileExtension, tryDeleteObjectByUrl } from "@/lib/storage-upload";
-import type { Itinerary, ItineraryDay } from "@/types";
+import type { Itinerary, ItineraryBlockType, ItineraryDay } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -38,14 +37,24 @@ const emptyForm: ItineraryFormData = {
   price: 0,
   duration: 1,
   destinations: [],
-  highlights: [],
+  highlights: "",
   coverImage: "",
   gallery: [],
   days: [],
-  included: [],
-  excluded: [],
+  included: "",
+  excluded: "",
   published: false,
 };
+
+const BLOCK_TYPE_OPTIONS: { value: ItineraryBlockType; label: string }[] = [
+  { value: "day", label: "Day (numbered in timeline)" },
+  { value: "morning", label: "Morning" },
+  { value: "afternoon", label: "Afternoon" },
+  { value: "evening", label: "Evening" },
+  { value: "night", label: "Night" },
+  { value: "time", label: "Time range" },
+  { value: "custom", label: "Custom label" },
+];
 
 function slugify(text: string) {
   return text
@@ -67,18 +76,25 @@ export default function AdminItinerariesPage() {
   const [createId, setCreateId] = useState<string | null>(null);
   const [form, setForm] = useState<ItineraryFormData>(emptyForm);
 
-  const fetchItineraries = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getAllItineraries();
-      setItineraries(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load trip guides");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchItineraries = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      try {
+        if (!opts?.silent) {
+          setLoading(true);
+        }
+        setError(null);
+        const data = await getAllItineraries();
+        setItineraries(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load trip guides");
+      } finally {
+        if (!opts?.silent) {
+          setLoading(false);
+        }
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -90,12 +106,14 @@ export default function AdminItinerariesPage() {
     setEditingId(null);
     setCreateId(newEntityId("itineraries"));
     setForm(emptyForm);
+    setError(null);
     setDialogOpen(true);
   }
 
   function openEdit(item: Itinerary) {
     setCreateId(null);
     setEditingId(item.id);
+    setError(null);
     setForm({
       title: item.title,
       slug: item.slug,
@@ -131,7 +149,7 @@ export default function AdminItinerariesPage() {
       }
       setDialogOpen(false);
       setCreateId(null);
-      await fetchItineraries();
+      await fetchItineraries({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save trip guide");
     } finally {
@@ -144,7 +162,7 @@ export default function AdminItinerariesPage() {
     try {
       setError(null);
       await deleteItinerary(id);
-      await fetchItineraries();
+      await fetchItineraries({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete trip guide");
     }
@@ -168,7 +186,12 @@ export default function AdminItinerariesPage() {
       ...prev,
       days: [
         ...prev.days,
-        { day: prev.days.length + 1, title: "", description: "" },
+        {
+          day: prev.days.length + 1,
+          blockType: "day",
+          title: "",
+          description: "",
+        },
       ],
     }));
   }
@@ -182,12 +205,10 @@ export default function AdminItinerariesPage() {
     }));
   }
 
-  function updateDay(index: number, field: keyof ItineraryDay, value: string) {
+  function updateDay(index: number, partial: Partial<ItineraryDay>) {
     setForm((prev) => ({
       ...prev,
-      days: prev.days.map((d, i) =>
-        i === index ? { ...d, [field]: value } : d
-      ),
+      days: prev.days.map((d, i) => (i === index ? { ...d, ...partial } : d)),
     }));
   }
 
@@ -220,7 +241,7 @@ export default function AdminItinerariesPage() {
             Manage your paid trip guides and free previews
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} disabled={loading}>
           <Plus className="size-4" />
           Create New Guide
         </Button>
@@ -239,7 +260,7 @@ export default function AdminItinerariesPage() {
       ) : itineraries.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-muted-foreground">
           <p className="text-sm">No trip guides yet</p>
-          <Button variant="link" onClick={openCreate} className="mt-2">
+          <Button variant="link" onClick={openCreate} disabled={loading} className="mt-2">
             Create your first guide
           </Button>
         </div>
@@ -306,6 +327,12 @@ export default function AdminItinerariesPage() {
             </DialogDescription>
           </DialogHeader>
 
+          {error && (
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           <div className="grid gap-4 py-2">
             <div className="grid gap-2">
               <Label htmlFor="title">Title</Label>
@@ -330,6 +357,7 @@ export default function AdminItinerariesPage() {
             <div className="grid gap-2">
               <Label>Description</Label>
               <TiptapEditor
+                key={resourceId ?? "itinerary-desc"}
                 content={form.description}
                 onChange={(html) => updateField("description", html)}
               />
@@ -378,64 +406,54 @@ export default function AdminItinerariesPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="highlights">Highlights (comma-separated)</Label>
-              <Input
-                id="highlights"
-                value={form.highlights.join(", ")}
-                onChange={(e) =>
-                  updateField(
-                    "highlights",
-                    e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
-                  )
-                }
-                placeholder="Glacier trekking, Wine tasting"
+              <Label>Highlights (sidebar — rich text)</Label>
+              <TiptapEditor
+                key={`${resourceId ?? "it"}-highlights`}
+                content={form.highlights}
+                onChange={(html) => updateField("highlights", html)}
+                compact
               />
             </div>
 
             <div className="grid gap-2">
-                <Label htmlFor="included">Inside the guide (comma-separated)</Label>
-              <Input
-                id="included"
-                value={form.included.join(", ")}
-                onChange={(e) =>
-                  updateField(
-                    "included",
-                    e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
-                  )
-                }
-                placeholder="Day-by-day plan, Local tips, Map pins"
+              <Label>Inside the full guide (rich text)</Label>
+              <TiptapEditor
+                key={`${resourceId ?? "it"}-included`}
+                content={form.included}
+                onChange={(html) => updateField("included", html)}
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="excluded">Excluded (comma-separated)</Label>
-              <Input
-                id="excluded"
-                value={form.excluded.join(", ")}
-                onChange={(e) =>
-                  updateField(
-                    "excluded",
-                    e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
-                  )
-                }
-                placeholder="Flights, Travel insurance"
+              <Label>Not covered in this guide (rich text)</Label>
+              <TiptapEditor
+                key={`${resourceId ?? "it"}-excluded`}
+                content={form.excluded}
+                onChange={(html) => updateField("excluded", html)}
               />
             </div>
 
             <Separator />
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Days</Label>
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <Label>Itinerary sections</Label>
+                  <p className="text-xs text-muted-foreground">
+                    By day, time of day, a time range, or a custom label. The
+                    public page previews the first two sections; the rest are
+                    locked until purchase.
+                  </p>
+                </div>
                 <Button variant="outline" size="sm" onClick={addDay}>
                   <Plus className="size-3.5" />
-                  Add Day
+                  Add section
                 </Button>
               </div>
               {form.days.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  No days added yet. The public page previews the first two
-                  days and locks the rest behind purchase.
+                  No sections yet. Add a section for each day, morning/afternoon
+                  block, or time window.
                 </p>
               )}
               {form.days.map((day, index) => (
@@ -443,8 +461,11 @@ export default function AdminItinerariesPage() {
                   key={index}
                   className="space-y-2 rounded-lg border bg-muted/30 p-3"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Day {day.day}</span>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-sm font-medium">
+                      Section {index + 1}
+                      {day.blockType === "day" ? ` · order #${day.day}` : null}
+                    </span>
                     <Button
                       variant="ghost"
                       size="icon-xs"
@@ -453,21 +474,83 @@ export default function AdminItinerariesPage() {
                       <Trash2 className="size-3" />
                     </Button>
                   </div>
-                  <Input
-                    value={day.title}
-                    onChange={(e) =>
-                      updateDay(index, "title", e.target.value)
-                    }
-                    placeholder="Day title"
-                  />
-                  <Textarea
-                    value={day.description}
-                    onChange={(e) =>
-                      updateDay(index, "description", e.target.value)
-                    }
-                    placeholder="Day description"
-                    className="min-h-[60px]"
-                  />
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs">Segment type</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                        value={day.blockType ?? "day"}
+                        onChange={(e) =>
+                          updateDay(index, {
+                            blockType: e.target
+                              .value as ItineraryBlockType,
+                          })
+                        }
+                      >
+                        {BLOCK_TYPE_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {(day.blockType ?? "day") === "day" && (
+                      <div className="grid gap-1.5">
+                        <Label className="text-xs">Day # (timeline)</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={day.day}
+                          onChange={(e) =>
+                            updateDay(index, {
+                              day: Math.max(1, parseInt(e.target.value) || 1),
+                            })
+                          }
+                        />
+                      </div>
+                    )}
+                    {day.blockType === "time" && (
+                      <div className="grid gap-1.5 sm:col-span-2">
+                        <Label className="text-xs">Time range</Label>
+                        <Input
+                          value={day.timeRange ?? ""}
+                          onChange={(e) =>
+                            updateDay(index, { timeRange: e.target.value })
+                          }
+                          placeholder="e.g. 9:00 am – 12:30 pm"
+                        />
+                      </div>
+                    )}
+                    {day.blockType === "custom" && (
+                      <div className="grid gap-1.5 sm:col-span-2">
+                        <Label className="text-xs">Timeline label</Label>
+                        <Input
+                          value={day.customLabel ?? ""}
+                          onChange={(e) =>
+                            updateDay(index, { customLabel: e.target.value })
+                          }
+                          placeholder="e.g. Coffee & pastries"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="text-xs">Section title (rich text)</Label>
+                    <TiptapEditor
+                      key={`${resourceId ?? "it"}-sec-${index}-title`}
+                      compact
+                      content={day.title}
+                      onChange={(html) => updateDay(index, { title: html })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="text-xs">Details (rich text)</Label>
+                    <TiptapEditor
+                      key={`${resourceId ?? "it"}-sec-${index}-desc`}
+                      content={day.description}
+                      onChange={(html) => updateDay(index, { description: html })}
+                    />
+                  </div>
                 </div>
               ))}
             </div>

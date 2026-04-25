@@ -20,11 +20,11 @@ const FILTER_TAGS = [
 ];
 
 const GRADIENT_CYCLE = [
-  "from-brazil-green to-brazil-blue",
-  "from-gold to-ochre",
+  "from-brazil-blue to-sky",
+  "from-ochre to-brazil-blue",
   "from-sky to-brazil-blue",
-  "from-ochre to-gold",
-  "from-brazil-green to-gold",
+  "from-brazil-green to-sky",
+  "from-brazil-blue to-brazil-green",
   "from-sky to-ochre",
 ];
 
@@ -47,7 +47,7 @@ export default function UGCFeedPage() {
         );
 
   return (
-    <main className="pt-24 px-4 pb-20">
+    <main className="pt-32 px-4 pb-20">
       <div className="mx-auto max-w-7xl">
         <h1 className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">
           UGC Portfolio
@@ -91,7 +91,7 @@ export default function UGCFeedPage() {
         {/* Loading */}
         {loading && (
           <div className="mt-16 flex justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-brazil-green border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-brazil-blue border-t-transparent" />
           </div>
         )}
 

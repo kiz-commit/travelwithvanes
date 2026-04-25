@@ -1,3 +1,12 @@
+export type ItineraryBlockType =
+  | "day"
+  | "morning"
+  | "afternoon"
+  | "evening"
+  | "night"
+  | "time"
+  | "custom";
+
 export interface Itinerary {
   id: string;
   title: string;
@@ -6,19 +15,34 @@ export interface Itinerary {
   price: number;
   duration: number;
   destinations: string[];
-  highlights: string[];
+  /** Rich text (Tiptap HTML). */
+  highlights: string;
   coverImage: string;
   gallery: string[];
   days: ItineraryDay[];
-  included: string[];
-  excluded: string[];
+  /** Rich text (Tiptap HTML). */
+  included: string;
+  /** Rich text (Tiptap HTML). */
+  excluded: string;
   published: boolean;
   createdAt: Date;
 }
 
 export interface ItineraryDay {
+  /** Order in the timeline (1, 2, 3, …), shown in the badge when `blockType` is `day`. */
   day: number;
+  /**
+   * How this block appears in the public timeline. Use "day" for multi-day plans,
+   * or time-of-day / time range / custom for single-day or hourly breakdowns.
+   */
+  blockType: ItineraryBlockType;
+  /** When `blockType` is "time" (e.g. "9:00 am – 12:00 pm"). */
+  timeRange?: string;
+  /** When `blockType` is "custom" — short text in the timeline badge. */
+  customLabel?: string;
+  /** Rich text (Tiptap HTML). */
   title: string;
+  /** Rich text (Tiptap HTML). */
   description: string;
   image?: string;
 }

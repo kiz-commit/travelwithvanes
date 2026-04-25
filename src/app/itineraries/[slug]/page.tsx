@@ -3,34 +3,33 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import {
-  CheckCircle2,
-  XCircle,
-  MapPin,
-  Clock,
-  Calendar,
-  Loader2,
-  Lock,
-} from "lucide-react";
+import { MapPin, Clock, Calendar, Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getItineraryBySlug } from "@/lib/firestore";
+import { hasRichListContent } from "@/lib/itinerary-migrate";
+import {
+  segmentTimelineLabel,
+  segmentUsesDayCircle,
+} from "@/lib/itinerary-segment";
+import { isRichTextEmpty } from "@/lib/rich-text";
+import { SanitizedHtml } from "@/components/sanitized-html";
 import type { Itinerary } from "@/types";
 
 const galleryGradients = [
-  "from-brazil-green to-brazil-blue",
-  "from-ochre to-sky",
-  "from-gold to-brazil-green",
+  "from-brazil-blue to-sky",
+  "from-ochre to-brazil-blue",
+  "from-sky to-brazil-green",
   "from-sky to-brazil-blue",
-  "from-brazil-green to-gold",
-  "from-ochre to-gold",
+  "from-brazil-blue to-brazil-green",
+  "from-ochre to-sky",
 ];
 
 function LoadingState() {
   return (
-    <main className="pt-24 pb-20">
+    <main className="pt-32 pb-20">
       <div className="mx-auto max-w-7xl px-4">
         <div className="animate-pulse">
           <div className="h-64 rounded-2xl bg-muted" />
@@ -51,7 +50,7 @@ function LoadingState() {
 
 function NotFound() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center pt-24 pb-20">
+    <main className="flex min-h-screen flex-col items-center justify-center pt-32 pb-20">
       <MapPin className="size-16 text-muted-foreground/40" />
       <h1 className="mt-6 font-heading text-3xl font-bold">
         Trip Guide Not Found
@@ -111,12 +110,15 @@ export default function ItineraryDetailPage() {
   if (notFound || !itinerary) return <NotFound />;
 
   const previewDays = itinerary.days.slice(0, Math.min(2, itinerary.days.length));
-  const lockedDaysCount = Math.max(itinerary.days.length - previewDays.length, 0);
+  const lockedSectionCount = Math.max(
+    itinerary.days.length - previewDays.length,
+    0
+  );
 
   return (
     <main className="pb-20">
       {/* Hero */}
-      <section className="relative flex min-h-[340px] flex-col justify-end bg-gradient-to-br from-brazil-green via-brazil-blue to-gold pt-24 pb-10">
+      <section className="relative flex min-h-[340px] flex-col justify-end bg-gradient-to-br from-[#071f3d] via-brazil-blue to-sky pt-24 pb-10">
         <div className="absolute inset-0 bg-black/30" />
         <div className="relative z-10 mx-auto w-full max-w-7xl px-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -150,9 +152,12 @@ export default function ItineraryDetailPage() {
               <h2 className="font-heading text-2xl font-bold">
                 About This Guide
               </h2>
-              <p className="mt-4 leading-relaxed text-muted-foreground">
-                {itinerary.description}
-              </p>
+              <div className="mt-4 leading-relaxed text-muted-foreground">
+                <SanitizedHtml
+                  html={itinerary.description}
+                  className="text-muted-foreground [&_a]:text-brazil-blue"
+                />
+              </div>
               <p className="mt-4 rounded-xl bg-sand/60 p-4 text-sm leading-relaxed text-muted-foreground">
                 This is the free preview. Unlock the full guide for the complete
                 route, day-by-day plan, local tips, and planning details.
@@ -168,31 +173,52 @@ export default function ItineraryDetailPage() {
                   Free Guide Preview
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  A quick taste of the full day-by-day guide before you buy.
+                  A quick taste of the full guide before you buy.
                 </p>
                 <div className="mt-6 space-y-0">
-                  {previewDays.map((day, index) => (
-                    <div key={day.day} className="relative flex gap-4 pb-8">
-                      <div className="flex flex-col items-center">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brazil-green text-sm font-bold text-white">
-                          {day.day}
+                  {previewDays.map((day, index) => {
+                    const useCircle = segmentUsesDayCircle(day);
+                    const badge = segmentTimelineLabel(day);
+                    return (
+                      <div
+                        key={`${index}-${day.day}`}
+                        className="relative flex gap-4 pb-8"
+                      >
+                        <div className="flex flex-col items-center">
+                          <div
+                            className={
+                              useCircle
+                                ? "flex size-10 shrink-0 items-center justify-center rounded-full bg-brazil-blue text-sm font-bold text-white"
+                                : "flex min-h-10 min-w-10 max-w-[7.5rem] shrink-0 items-center justify-center rounded-xl bg-brazil-blue px-1.5 text-center text-[11px] font-semibold leading-tight text-white"
+                            }
+                          >
+                            {useCircle ? day.day : badge}
+                          </div>
+                          {index < previewDays.length - 1 && (
+                            <div className="w-0.5 flex-1 bg-brazil-blue/20" />
+                          )}
                         </div>
-                        {index < previewDays.length - 1 && (
-                          <div className="w-0.5 flex-1 bg-brazil-green/20" />
-                        )}
+                        <div className="min-w-0 flex-1 pt-1">
+                          {!isRichTextEmpty(day.title) && (
+                            <div className="font-heading text-lg font-semibold text-foreground">
+                              <SanitizedHtml
+                                html={day.title}
+                                className="prose-p:my-0 [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-base"
+                              />
+                            </div>
+                          )}
+                          <div className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                            <SanitizedHtml
+                              html={day.description}
+                              className="text-muted-foreground [&_a]:text-brazil-blue"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div className="pt-1">
-                        <h3 className="font-heading text-lg font-semibold">
-                          {day.title}
-                        </h3>
-                        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                          {day.description}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
-                {lockedDaysCount > 0 && (
+                {lockedSectionCount > 0 && (
                   <div className="rounded-xl border border-dashed bg-muted/40 p-5">
                     <div className="flex items-start gap-3">
                       <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-background">
@@ -200,9 +226,11 @@ export default function ItineraryDetailPage() {
                       </div>
                       <div>
                         <h3 className="font-heading text-lg font-semibold">
-                          {lockedDaysCount} more{" "}
-                          {lockedDaysCount === 1 ? "day" : "days"} in the full
-                          guide
+                          {lockedSectionCount} more{" "}
+                          {lockedSectionCount === 1
+                            ? "section"
+                            : "sections"}{" "}
+                          in the full guide
                         </h3>
                         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                           Buy the full guide to unlock the complete itinerary,
@@ -219,36 +247,32 @@ export default function ItineraryDetailPage() {
             <Separator />
 
             {/* Included */}
-            {itinerary.included.length > 0 && (
+            {hasRichListContent(itinerary.included) && (
               <section>
                 <h2 className="font-heading text-2xl font-bold">
                   Inside the Full Guide
                 </h2>
-                <ul className="mt-4 space-y-2">
-                  {itinerary.included.map((item) => (
-                    <li key={item} className="flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-brazil-green" />
-                      <span className="text-muted-foreground">{item}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-4 text-muted-foreground">
+                  <SanitizedHtml
+                    html={itinerary.included}
+                    className="text-muted-foreground [&_a]:text-brazil-blue [&_ul]:my-0"
+                  />
+                </div>
               </section>
             )}
 
             {/* Excluded */}
-            {itinerary.excluded.length > 0 && (
+            {hasRichListContent(itinerary.excluded) && (
               <section>
                 <h2 className="font-heading text-2xl font-bold">
                   Not Covered in This Guide
                 </h2>
-                <ul className="mt-4 space-y-2">
-                  {itinerary.excluded.map((item) => (
-                    <li key={item} className="flex items-start gap-3">
-                      <XCircle className="mt-0.5 size-5 shrink-0 text-destructive" />
-                      <span className="text-muted-foreground">{item}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="mt-4 text-muted-foreground">
+                  <SanitizedHtml
+                    html={itinerary.excluded}
+                    className="text-destructive/90 [&_a]:text-brazil-blue"
+                  />
+                </div>
               </section>
             )}
 
@@ -277,7 +301,7 @@ export default function ItineraryDetailPage() {
               <CardContent className="flex flex-col gap-5">
                 <div>
                   <p className="text-sm text-muted-foreground">Full guide</p>
-                  <p className="font-heading text-4xl font-bold text-brazil-green">
+                  <p className="font-heading text-4xl font-bold text-brazil-blue">
                     ${itinerary.price}
                   </p>
                   <p className="text-sm text-muted-foreground">
@@ -298,22 +322,17 @@ export default function ItineraryDetailPage() {
                   </div>
                 </div>
 
-                {itinerary.highlights.length > 0 && (
+                {hasRichListContent(itinerary.highlights) && (
                   <>
                     <Separator />
                     <div>
                       <p className="mb-2 text-sm font-semibold">Highlights</p>
-                      <ul className="space-y-1.5">
-                        {itinerary.highlights.map((h) => (
-                          <li
-                            key={h}
-                            className="flex items-start gap-2 text-sm text-muted-foreground"
-                          >
-                            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-brazil-green" />
-                            {h}
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="text-sm text-muted-foreground">
+                        <SanitizedHtml
+                          html={itinerary.highlights}
+                          className="prose-p:text-sm [&_a]:text-brazil-blue"
+                        />
+                      </div>
                     </div>
                   </>
                 )}

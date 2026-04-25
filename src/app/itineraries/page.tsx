@@ -7,15 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getPublishedItineraries } from "@/lib/firestore";
+import { plainTextFromHtml } from "@/lib/rich-text";
 import type { Itinerary } from "@/types";
 
 const gradients = [
-  "from-brazil-green to-brazil-blue",
-  "from-ochre to-sky",
-  "from-gold to-brazil-green",
+  "from-brazil-blue to-sky",
+  "from-ochre to-brazil-blue",
+  "from-sky to-brazil-green",
   "from-sky to-brazil-blue",
-  "from-brazil-green to-gold",
-  "from-ochre to-gold",
+  "from-brazil-blue to-brazil-green",
+  "from-ochre to-sky",
 ];
 
 function LoadingSkeleton() {
@@ -46,15 +47,25 @@ function LoadingSkeleton() {
 export default function ItinerariesPage() {
   const [itineraries, setItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     getPublishedItineraries()
-      .then(setItineraries)
+      .then((data) => {
+        setItineraries(data);
+        setLoadError(null);
+      })
+      .catch((err) => {
+        setLoadError(
+          err instanceof Error ? err.message : "Could not load trip guides."
+        );
+        setItineraries([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <main className="pt-24 pb-20">
+    <main className="pt-32 pb-20">
       <div className="mx-auto max-w-7xl px-4">
         <div className="text-center">
           <h1 className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">
@@ -67,9 +78,17 @@ export default function ItinerariesPage() {
         </div>
 
         <div className="mt-14">
+          {loadError && (
+            <div
+              className="mb-8 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-center text-sm text-destructive"
+              role="alert"
+            >
+              {loadError}
+            </div>
+          )}
           {loading ? (
             <LoadingSkeleton />
-          ) : itineraries.length === 0 ? (
+          ) : itineraries.length === 0 && !loadError ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <MapPin className="size-12 text-muted-foreground/50" />
               <h2 className="mt-4 font-heading text-xl font-semibold">
@@ -103,7 +122,7 @@ export default function ItinerariesPage() {
                       {itinerary.title}
                     </h3>
                     <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {itinerary.description}
+                      {plainTextFromHtml(itinerary.description)}
                     </p>
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">
@@ -112,7 +131,7 @@ export default function ItinerariesPage() {
                       </Badge>
                     </div>
                     <div className="mt-auto flex items-center justify-between pt-2">
-                      <span className="text-base font-bold text-brazil-green">
+                      <span className="text-base font-bold text-brazil-blue">
                         Full guide ${itinerary.price}
                       </span>
                       <Button

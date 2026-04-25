@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapPin, ShoppingBag, Video } from "lucide-react";
+import { Home, MapPin, ShoppingBag, Video } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +55,20 @@ export default function AdminDashboardPage() {
       <h1 className="font-heading text-2xl font-semibold">Dashboard</h1>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Home className="size-4" />
+              <span className="text-sm font-medium">Homepage</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Hero image or video, headlines, and section copy for the public home page.
+            </p>
+            <Button variant="outline" size="sm" render={<Link href="/admin/homepage" />}>
+              Edit homepage
+            </Button>
+          </CardContent>
+        </Card>
         <StatCard
           label="Trip Guides"
           count={itineraryCount}

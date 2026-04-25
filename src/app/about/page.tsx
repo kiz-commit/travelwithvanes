@@ -34,7 +34,7 @@ export default function AboutPage() {
       <section className="mx-auto max-w-5xl px-4 py-20">
         <div className="flex flex-col items-center gap-12 md:flex-row md:items-start">
           {/* Avatar placeholder */}
-          <div className="h-[200px] w-[200px] shrink-0 rounded-full bg-gradient-to-br from-gold to-ochre" />
+          <div className="h-[200px] w-[200px] shrink-0 rounded-full bg-gradient-to-br from-sky to-brazil-blue" />
 
           {/* Bio */}
           <div className="flex flex-col gap-4 text-center md:text-left">
@@ -105,7 +105,7 @@ export default function AboutPage() {
           {stats.map((stat) => (
             <Card key={stat.label} className="text-center">
               <CardContent className="flex flex-col items-center gap-1 py-2">
-                <span className="font-heading text-4xl font-bold text-gold">
+                <span className="font-heading text-4xl font-bold text-brazil-blue">
                   {stat.value}
                 </span>
                 <span className="text-sm text-muted-foreground">
@@ -164,7 +164,7 @@ export default function AboutPage() {
       {/* CTA to itineraries */}
       <section className="py-20 px-4">
         <div className="mx-auto max-w-2xl text-center">
-          <Globe className="mx-auto size-10 text-brazil-green" />
+          <Globe className="mx-auto size-10 text-brazil-blue" />
           <h2 className="mt-4 font-heading text-3xl font-bold tracking-tight">
             Ready to explore?
           </h2>

@@ -13,6 +13,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { Itinerary, Product, UGCPost, type HomePageSettings } from "@/types";
+import { normalizeItinerary } from "@/lib/itinerary-migrate";
 
 function convertTimestamps<T>(
   data: Record<string, unknown>
@@ -28,23 +29,36 @@ function convertTimestamps<T>(
 
 const itinerariesRef = collection(db, "itineraries");
 
+function byCreatedAtDesc(
+  a: { createdAt?: Date },
+  b: { createdAt?: Date }
+): number {
+  const ta = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+  const tb = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+  return tb - ta;
+}
+
 export async function getPublishedItineraries(): Promise<Itinerary[]> {
-  const q = query(
-    itinerariesRef,
-    where("published", "==", true),
-    orderBy("createdAt", "desc")
-  );
+  // Query by published only, then sort in memory. A compound
+  // (published + orderBy createdAt) query needs a Firestore composite index; without it
+  // the query fails in production and the listing appears empty.
+  const q = query(itinerariesRef, where("published", "==", true));
   const snap = await getDocs(q);
-  return snap.docs.map((d) =>
-    convertTimestamps<Itinerary>({ id: d.id, ...d.data() })
+  const list = snap.docs.map((d) =>
+    normalizeItinerary(
+      convertTimestamps<Itinerary>({ id: d.id, ...d.data() })
+    )
   );
+  return list.sort(byCreatedAtDesc);
 }
 
 export async function getAllItineraries(): Promise<Itinerary[]> {
   const q = query(itinerariesRef, orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) =>
-    convertTimestamps<Itinerary>({ id: d.id, ...d.data() })
+    normalizeItinerary(
+      convertTimestamps<Itinerary>({ id: d.id, ...d.data() })
+    )
   );
 }
 
@@ -55,7 +69,9 @@ export async function getItineraryBySlug(
   const snap = await getDocs(q);
   if (snap.empty) return null;
   const d = snap.docs[0];
-  return convertTimestamps<Itinerary>({ id: d.id, ...d.data() });
+  return normalizeItinerary(
+    convertTimestamps<Itinerary>({ id: d.id, ...d.data() })
+  );
 }
 
 export async function getItineraryById(
@@ -63,7 +79,9 @@ export async function getItineraryById(
 ): Promise<Itinerary | null> {
   const d = await getDoc(doc(db, "itineraries", id));
   if (!d.exists()) return null;
-  return convertTimestamps<Itinerary>({ id: d.id, ...d.data() });
+  return normalizeItinerary(
+    convertTimestamps<Itinerary>({ id: d.id, ...d.data() })
+  );
 }
 
 /**
@@ -96,15 +114,12 @@ export async function deleteItinerary(id: string): Promise<void> {
 const productsRef = collection(db, "products");
 
 export async function getPublishedProducts(): Promise<Product[]> {
-  const q = query(
-    productsRef,
-    where("published", "==", true),
-    orderBy("createdAt", "desc")
-  );
+  const q = query(productsRef, where("published", "==", true));
   const snap = await getDocs(q);
-  return snap.docs.map((d) =>
+  const list = snap.docs.map((d) =>
     convertTimestamps<Product>({ id: d.id, ...d.data() })
   );
+  return list.sort(byCreatedAtDesc);
 }
 
 export async function getAllProducts(): Promise<Product[]> {

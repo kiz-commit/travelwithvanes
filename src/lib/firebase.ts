@@ -1,5 +1,9 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import {
+  getFirestore,
+  initializeFirestore,
+  type Firestore,
+} from "firebase/firestore";
 import { getAuth, type Auth } from "firebase/auth";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
@@ -28,7 +32,16 @@ function getApp(): FirebaseApp {
 
 const app = getApp();
 
-export const db: Firestore = getFirestore(app);
+// Avoid "Unsupported field value: undefined" on setDoc/updateDoc (nested form fields, optionals).
+function createDb(): Firestore {
+  try {
+    return initializeFirestore(app, { ignoreUndefinedProperties: true });
+  } catch {
+    return getFirestore(app);
+  }
+}
+
+export const db: Firestore = createDb();
 
 let _auth: Auth | null = null;
 export function getFirebaseAuth(): Auth {

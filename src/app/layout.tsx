@@ -19,9 +19,9 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Travel with Vanessa | Brazil & Australia Travel",
+  title: "TravelwithVanes | Brazil & Australia Travel",
   description:
-    "Preview curated trip guides, authentic content, and partnership opportunities inspired by Brazil and Australia.",
+    "Stylish travel guides, honest recommendations, and stories from Brazil, Australia, and everywhere worth the extra stop.",
 };
 
 export default function RootLayout({

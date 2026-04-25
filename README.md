@@ -63,9 +63,18 @@ Required variables:
 2. Enable **Firestore Database** (start in test mode for development)
 3. Enable **Authentication** with Email/Password provider
 4. Enable **Storage**
-5. **Storage security rules** — The repo includes [`storage.rules`](storage.rules). In the Firebase console under Storage → Rules, allow public **read** and authenticated **write** to paths `itineraries/`, `products/`, `ugc/`, and `site/` (admin uploads and homepage media). You can paste the file contents and publish. The admin must be signed in to Firebase Auth when uploading.
-6. Create an admin user in Firebase Auth (email/password)
-7. Copy your Firebase config values into `.env.local`
+5. **Storage CORS (browser uploads from your domain)** — The bucket must allow browser `POST`/`OPTIONS` to `firebasestorage.googleapis.com`, or the console shows a CORS / “preflight” error even when rules and auth are correct. Use [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (`gcloud` + `gsutil`), with your **Firebase project id** and **storage bucket** from Project settings (e.g. `your-project.appspot.com`):
+
+   ```bash
+   gcloud auth login
+   gcloud config set project YOUR_PROJECT_ID
+   gsutil cors set storage-cors.json gs://YOUR_STORAGE_BUCKET
+   ```
+
+   The repo includes [`storage-cors.json`](storage-cors.json) (uses `"origin": ["*"]` so any deployed URL works; you can later narrow origins to your site for stricter CORS). After `gcloud auth login`, you can use [`scripts/apply-storage-cors.sh`](scripts/apply-storage-cors.sh) to list your bucket name and apply CORS. If `gsutil` is not available, in [Google Cloud Console](https://console.cloud.google.com/storage/browser) open your bucket and set CORS using the same JSON.
+6. **Storage security rules** — The repo includes [`storage.rules`](storage.rules). In the Firebase console under Storage → Rules, allow public **read** and authenticated **write** to paths `itineraries/`, `products/`, `ugc/`, and `site/` (admin uploads and homepage media). You can paste the file contents and publish. The admin must be signed in to Firebase Auth when uploading.
+7. Create an admin user in Firebase Auth (email/password)
+8. Copy your Firebase config values into `.env.local`
 
 ### 4. Set up Stripe
 

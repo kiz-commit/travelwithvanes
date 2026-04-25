@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
 
   if (loading || user) {
     return (
-      <div className="flex min-h-screen items-center justify-center pt-24">
+      <div className="flex min-h-screen items-center justify-center pt-32">
         <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
@@ -51,7 +51,7 @@ export default function AdminLoginPage() {
 
   if (!isFirebaseConfigValid()) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 pt-24">
+      <div className="flex min-h-screen items-center justify-center px-4 pt-32">
         <Card className="w-full max-w-md border-destructive/50">
           <CardContent className="pt-6">
             <h1 className="font-heading text-2xl font-semibold">Firebase not configured</h1>
@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 pt-24">
+    <div className="flex min-h-screen items-center justify-center px-4 pt-32">
       <Card className="w-full max-w-md">
         <CardContent>
           <h1 className="font-heading text-2xl font-semibold">Admin Login</h1>

@@ -70,18 +70,25 @@ export default function AdminUGCPage() {
   const [createId, setCreateId] = useState<string | null>(null);
   const [form, setForm] = useState<UGCFormData>(emptyForm);
 
-  const fetchPosts = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getAllUGCPosts();
-      setPosts(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load UGC posts");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchPosts = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      try {
+        if (!opts?.silent) {
+          setLoading(true);
+        }
+        setError(null);
+        const data = await getAllUGCPosts();
+        setPosts(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load UGC posts");
+      } finally {
+        if (!opts?.silent) {
+          setLoading(false);
+        }
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -128,7 +135,7 @@ export default function AdminUGCPage() {
       }
       setDialogOpen(false);
       setCreateId(null);
-      await fetchPosts();
+      await fetchPosts({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save UGC post");
     } finally {
@@ -141,7 +148,7 @@ export default function AdminUGCPage() {
     try {
       setError(null);
       await deleteUGCPost(id);
-      await fetchPosts();
+      await fetchPosts({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete UGC post");
     }
@@ -304,6 +311,7 @@ export default function AdminUGCPage() {
             <div className="grid gap-2">
               <Label>Content</Label>
               <TiptapEditor
+                key={resourceId ?? "ugc-content"}
                 content={form.content}
                 onChange={(html) => updateField("content", html)}
               />

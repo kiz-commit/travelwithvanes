@@ -58,18 +58,25 @@ export default function AdminProductsPage() {
   const [createId, setCreateId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductFormData>(emptyForm);
 
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getAllProducts();
-      setProducts(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load products");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchProducts = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      try {
+        if (!opts?.silent) {
+          setLoading(true);
+        }
+        setError(null);
+        const data = await getAllProducts();
+        setProducts(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load products");
+      } finally {
+        if (!opts?.silent) {
+          setLoading(false);
+        }
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -116,7 +123,7 @@ export default function AdminProductsPage() {
       }
       setDialogOpen(false);
       setCreateId(null);
-      await fetchProducts();
+      await fetchProducts({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save product");
     } finally {
@@ -129,7 +136,7 @@ export default function AdminProductsPage() {
     try {
       setError(null);
       await deleteProduct(id);
-      await fetchProducts();
+      await fetchProducts({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete product");
     }
@@ -287,6 +294,7 @@ export default function AdminProductsPage() {
             <div className="grid gap-2">
               <Label>Description</Label>
               <TiptapEditor
+                key={resourceId ?? "product-desc"}
                 content={form.description}
                 onChange={(html) => updateField("description", html)}
               />

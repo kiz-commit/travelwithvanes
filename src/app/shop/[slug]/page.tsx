@@ -50,7 +50,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <main className="pt-24 pb-20 px-4">
+      <main className="pt-32 pb-20 px-4">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-10 md:grid-cols-2">
             <div>
@@ -79,7 +79,7 @@ export default function ProductDetailPage() {
 
   if (notFound || !product) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 pt-24">
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-4 pt-32">
         <ShoppingBag className="size-12 text-muted-foreground/50" />
         <h1 className="font-heading text-2xl font-bold">Product not found</h1>
         <p className="text-sm text-muted-foreground">
@@ -93,12 +93,12 @@ export default function ProductDetailPage() {
   const images = product.images.length > 0 ? product.images : [null];
 
   return (
-    <main className="pt-24 pb-20 px-4">
+    <main className="pt-32 pb-20 px-4">
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-10 md:grid-cols-2">
           {/* Image gallery */}
           <div>
-            <div className="aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-brazil-green/20 via-gold/20 to-sky/20">
+            <div className="aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-brazil-blue/20 via-sky/20 to-sand">
               {images[selectedImage] && (
                 <img
                   src={images[selectedImage]!}
@@ -126,7 +126,7 @@ export default function ProductDetailPage() {
                         className="size-full object-cover"
                       />
                     ) : (
-                      <div className="size-full bg-gradient-to-br from-brazil-green/20 via-gold/20 to-sky/20" />
+                      <div className="size-full bg-gradient-to-br from-brazil-blue/20 via-sky/20 to-sand" />
                     )}
                   </button>
                 ))}

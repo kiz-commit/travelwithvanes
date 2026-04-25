@@ -9,35 +9,36 @@ const navLinks = [
 
 export function Footer() {
   return (
-    <footer className="bg-[#1a1a1a] text-white/70">
+    <footer className="bg-[#071f3d] text-white/70">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid gap-12 py-16 md:grid-cols-[2fr_1fr_1fr]">
           <div className="max-w-sm">
             <div className="flex items-center gap-3">
-              <span className="grid size-10 place-items-center rounded-full bg-white text-[13px] font-semibold uppercase tracking-[-0.08em] text-[#1a1a1a]">
-                TV
+              <span className="relative grid size-10 place-items-center rounded-2xl bg-brazil-blue text-sm font-bold tracking-tight text-white shadow-sm shadow-brazil-blue/20">
+                V
+                <span className="absolute right-2 top-2 size-1.5 rounded-full bg-gold" />
               </span>
-              <span className="flex flex-col leading-none">
-                <span className="font-heading text-2xl font-semibold tracking-[-0.035em] text-white">
-                  Travel with <span className="italic text-gold">Vanessa</span>
+              <span className="flex flex-col leading-tight">
+                <span className="text-base font-semibold tracking-[-0.02em] text-white">
+                  TravelwithVanes
                 </span>
-                <span className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">
-                  @travelwithvanes
+                <span className="text-[11px] font-medium tracking-wide text-white/45">
+                  Travel more. Drift better.
                 </span>
               </span>
             </div>
             <p className="mt-4 text-[15px] leading-relaxed">
-              Exploring Brazil and Australia one adventure at a time, with
-              curated trip guides, authentic content, and travel stories.
+              Stylish travel guides, honest recommendations, and stories from
+              Brazil, Australia, and everywhere worth the extra stop.
             </p>
             <div className="mt-6 flex items-center gap-5">
-              <a href="#" className="text-white/50 transition-colors hover:text-gold text-[13px] font-medium uppercase tracking-wider">
+              <a href="#" className="text-white/50 transition-colors hover:text-sky text-[13px] font-medium uppercase tracking-wider">
                 Instagram
               </a>
-              <a href="#" className="text-white/50 transition-colors hover:text-gold text-[13px] font-medium uppercase tracking-wider">
+              <a href="#" className="text-white/50 transition-colors hover:text-sky text-[13px] font-medium uppercase tracking-wider">
                 YouTube
               </a>
-              <a href="#" className="text-white/50 transition-colors hover:text-gold text-[13px] font-medium uppercase tracking-wider">
+              <a href="#" className="text-white/50 transition-colors hover:text-sky text-[13px] font-medium uppercase tracking-wider">
                 TikTok
               </a>
             </div>
@@ -81,7 +82,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-white/10 py-6 text-center text-[12px] text-white/30 tracking-wide">
-          &copy; 2026 Travel with Vanessa. All rights reserved.
+          &copy; 2026 TravelwithVanes. All rights reserved.
         </div>
       </div>
     </footer>

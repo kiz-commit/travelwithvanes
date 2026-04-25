@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
@@ -24,25 +24,55 @@ const links = [
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setHidden(false);
+      lastScrollY.current = window.scrollY;
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
+
+  useEffect(() => {
+    function handleScroll() {
+      const currentScrollY = window.scrollY;
+      const scrollingDown = currentScrollY > lastScrollY.current;
+
+      setHidden(scrollingDown && currentScrollY > 120 && !open);
+      lastScrollY.current = currentScrollY;
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [open]);
 
   return (
-    <header className="fixed top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-black/[0.04]">
-      <nav className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8">
-        <Link href="/" className="group flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-full bg-foreground text-[13px] font-semibold uppercase tracking-[-0.08em] text-white shadow-sm">
-            TV
+    <header
+      className={cn(
+        "pointer-events-none fixed top-4 z-50 w-full px-4 transition-transform duration-300 ease-out sm:top-5 sm:px-6",
+        hidden ? "-translate-y-[calc(100%+2rem)]" : "translate-y-0"
+      )}
+    >
+      <nav className="pointer-events-auto mx-auto flex min-h-[64px] max-w-7xl items-center justify-between gap-4 rounded-full border border-sky/30 bg-[#f0f9ff]/92 px-3 py-2 text-foreground shadow-[0_18px_60px_rgba(56,189,248,0.18)] backdrop-blur-2xl sm:px-4">
+        <Link href="/" className="group flex min-w-0 items-center gap-3 pl-1">
+          <span className="relative grid size-10 shrink-0 place-items-center rounded-2xl bg-brazil-blue text-sm font-bold tracking-tight text-white shadow-sm shadow-brazil-blue/25 transition group-hover:scale-105 group-hover:bg-brazil-green">
+            V
+            <span className="absolute right-2 top-2 size-1.5 rounded-full bg-gold" />
           </span>
-          <span className="flex flex-col leading-none">
-            <span className="font-heading text-[23px] font-semibold tracking-[-0.035em]">
-              Travel with <span className="italic text-ochre">Vanessa</span>
+          <span className="min-w-0 flex flex-col">
+            <span className="text-[15px] font-semibold tracking-[-0.02em] text-foreground sm:text-base">
+              TravelwithVanes
             </span>
-            <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/35">
-              @travelwithvanes
+            <span className="hidden text-[11px] font-medium tracking-wide text-foreground/50 sm:block">
+              Travel more. Drift better.
             </span>
           </span>
         </Link>
 
-        <ul className="hidden items-center gap-0.5 md:flex">
+        <ul className="hidden items-center gap-1 rounded-full bg-sky/10 p-1 md:flex">
           {links.map(({ href, label }) => {
             const isActive =
               href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -52,10 +82,10 @@ export function Navbar() {
                 <Link
                   href={href}
                   className={cn(
-                    "relative px-4 py-2 text-[13px] font-medium uppercase tracking-[0.08em] transition-colors",
+                    "rounded-full px-3.5 py-2 text-[13px] font-semibold tracking-wide transition-all duration-200",
                     isActive
-                      ? "text-foreground"
-                      : "text-foreground/50 hover:text-foreground"
+                      ? "bg-white text-brazil-blue shadow-sm"
+                      : "text-[#31516f] hover:bg-white/70 hover:text-brazil-blue"
                   )}
                 >
                   {label}
@@ -67,34 +97,41 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Button
-            className="rounded-full bg-foreground px-6 text-[13px] font-medium uppercase tracking-[0.06em] text-white hover:bg-foreground/80"
+            className="h-11 rounded-full bg-brazil-blue px-5 text-[13px] font-semibold tracking-wide text-white shadow-[0_8px_24px_rgba(0,39,118,0.24)] transition hover:bg-sky"
             render={<Link href="/itineraries" />}
           >
-            Browse Guides
+            Explore Trips
           </Button>
         </div>
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
             className="md:hidden"
-            render={<Button variant="ghost" size="icon" />}
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full text-foreground hover:bg-sky/10 hover:text-brazil-blue"
+              />
+            }
           >
             <Menu className="size-5" />
             <span className="sr-only">Open menu</span>
           </SheetTrigger>
-          <SheetContent side="right" className="w-80 p-8">
+          <SheetContent side="right" className="w-80 bg-[#f0f9ff] p-8 text-foreground">
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <div className="mb-10">
               <div className="flex items-center gap-3">
-                <span className="grid size-10 place-items-center rounded-full bg-foreground text-[13px] font-semibold uppercase tracking-[-0.08em] text-white">
-                  TV
+                <span className="relative grid size-10 shrink-0 place-items-center rounded-2xl bg-brazil-blue text-sm font-bold tracking-tight text-white shadow-sm shadow-brazil-blue/25">
+                  V
+                  <span className="absolute right-2 top-2 size-1.5 rounded-full bg-gold" />
                 </span>
-                <span className="flex flex-col leading-none">
-                  <span className="font-heading text-xl font-semibold tracking-[-0.035em]">
-                    Travel with <span className="italic text-ochre">Vanessa</span>
+                <span className="min-w-0 flex flex-col">
+                  <span className="text-base font-semibold tracking-[-0.02em] text-foreground">
+                    TravelwithVanes
                   </span>
-                  <span className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/35">
-                    @travelwithvanes
+                  <span className="text-[11px] font-medium tracking-wide text-foreground/50">
+                    Travel more. Drift better.
                   </span>
                 </span>
               </div>
@@ -110,10 +147,10 @@ export function Navbar() {
                       href={href}
                       onClick={() => setOpen(false)}
                       className={cn(
-                        "block rounded-lg px-4 py-3 text-[15px] font-medium tracking-wide transition-colors",
+                        "block rounded-xl px-4 py-3 text-[15px] font-semibold tracking-wide transition-colors",
                         isActive
-                          ? "bg-sand text-foreground"
-                          : "text-foreground/60 hover:text-foreground hover:bg-sand/50"
+                          ? "bg-brazil-blue text-white"
+                          : "text-[#31516f] hover:bg-sky/10 hover:text-brazil-blue"
                       )}
                     >
                       {label}
@@ -124,10 +161,10 @@ export function Navbar() {
             </ul>
             <div className="mt-8">
               <Button
-                className="w-full rounded-full bg-foreground px-6 py-3 h-12 text-[13px] font-medium uppercase tracking-[0.06em] text-white hover:bg-foreground/80"
+                className="h-12 w-full rounded-full bg-brazil-blue px-6 text-[13px] font-semibold tracking-wide text-white shadow-[0_8px_24px_rgba(0,39,118,0.24)] transition hover:bg-sky"
                 render={<Link href="/itineraries" onClick={() => setOpen(false)} />}
               >
-                Browse Guides
+                Explore Trips
               </Button>
             </div>
           </SheetContent>

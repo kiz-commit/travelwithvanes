@@ -52,9 +52,9 @@ export default function Home() {
         )}
         {(h.mode === "gradient" || !hasHeroMedia) && (
           <>
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0a2e1f] via-[#0c3d2e] to-[#1a4a3a]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,215,0,0.15),transparent_60%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(77,172,212,0.1),transparent_60%)]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#071f3d] via-[#123b6d] to-[#0e7490]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(56,189,248,0.18),transparent_60%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(246,196,83,0.1),transparent_60%)]" />
           </>
         )}
         {hasHeroMedia && (
@@ -65,7 +65,7 @@ export default function Home() {
         )}
         {hasHeroMedia && (
           <>
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,215,0,0.1),transparent_55%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(56,189,248,0.14),transparent_55%)]" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(77,172,212,0.08),transparent_55%)]" />
           </>
         )}
@@ -85,7 +85,7 @@ export default function Home() {
           </p>
           <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Button
-              className="h-[52px] rounded-full bg-white px-8 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#0a2e1f] hover:bg-white/90 shadow-xl shadow-white/10"
+              className="h-[52px] rounded-full bg-white px-8 text-[13px] font-semibold uppercase tracking-[0.08em] text-brazil-blue hover:bg-white/90 shadow-xl shadow-white/10"
               render={<Link href={h.primaryCtaHref} />}
             >
               {h.primaryCtaLabel}
@@ -122,7 +122,7 @@ export default function Home() {
               href={settings.whereWeGo.brazil.href}
               className="group relative block overflow-hidden rounded-3xl"
             >
-              <div className="aspect-[4/3] bg-gradient-to-br from-[#0a3d2e] via-[#1a6b4a] to-[#2d8a5e] transition-transform duration-700 group-hover:scale-105" />
+              <div className="aspect-[4/3] bg-gradient-to-br from-[#071f3d] via-[#0f4c81] to-[#0e7490] transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <div className="mb-3 flex items-center gap-2">
@@ -144,7 +144,7 @@ export default function Home() {
               href={settings.whereWeGo.australia.href}
               className="group relative block overflow-hidden rounded-3xl"
             >
-              <div className="aspect-[4/3] bg-gradient-to-br from-[#8B5E3C] via-[#C1440E] to-[#d4764a] transition-transform duration-700 group-hover:scale-105" />
+              <div className="aspect-[4/3] bg-gradient-to-br from-[#0f4c81] via-[#2563eb] to-[#38bdf8] transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-8">
                 <div className="mb-3 flex items-center gap-2">
@@ -339,8 +339,8 @@ export default function Home() {
       </section>
 
       <section className="relative overflow-hidden px-5 py-24">
-        <div className="absolute inset-0 bg-[#0a2e1f]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,215,0,0.08),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[#071f3d]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.14),transparent_70%)]" />
         <div className="relative z-10 mx-auto max-w-xl text-center">
           <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold/60">
             {settings.finalCta.label}
@@ -353,7 +353,7 @@ export default function Home() {
             {settings.finalCta.body}
           </p>
           <Button
-            className="mt-10 h-[52px] rounded-full bg-gold px-8 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#0a2e1f] shadow-lg shadow-gold/20 hover:bg-gold/90"
+            className="mt-10 h-[52px] rounded-full bg-sky px-8 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#071f3d] shadow-lg shadow-sky/20 hover:bg-sky/90"
             render={<Link href={settings.finalCta.ctaHref} />}
           >
             {settings.finalCta.ctaLabel}
