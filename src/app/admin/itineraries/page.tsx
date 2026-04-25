@@ -6,7 +6,10 @@ import {
   createItinerary,
   updateItinerary,
   deleteItinerary,
+  newEntityId,
 } from "@/lib/firestore";
+import { MediaUploadField } from "@/components/admin/media-upload-field";
+import { fileExtension, tryDeleteObjectByUrl } from "@/lib/storage-upload";
 import type { Itinerary, ItineraryDay } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +63,8 @@ export default function AdminItinerariesPage() {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  /** Pre-generated Firestore id for new guides (enables Storage paths before first save) */
+  const [createId, setCreateId] = useState<string | null>(null);
   const [form, setForm] = useState<ItineraryFormData>(emptyForm);
 
   const fetchItineraries = useCallback(async () => {
@@ -83,11 +88,13 @@ export default function AdminItinerariesPage() {
 
   function openCreate() {
     setEditingId(null);
+    setCreateId(newEntityId("itineraries"));
     setForm(emptyForm);
     setDialogOpen(true);
   }
 
   function openEdit(item: Itinerary) {
+    setCreateId(null);
     setEditingId(item.id);
     setForm({
       title: item.title,
@@ -107,6 +114,8 @@ export default function AdminItinerariesPage() {
     setDialogOpen(true);
   }
 
+  const resourceId = editingId ?? createId;
+
   async function handleSave() {
     try {
       setSaving(true);
@@ -114,9 +123,14 @@ export default function AdminItinerariesPage() {
       if (editingId) {
         await updateItinerary(editingId, form);
       } else {
-        await createItinerary(form);
+        if (!createId) {
+          setError("Internal error: missing new guide id. Close and try again.");
+          return;
+        }
+        await createItinerary(form, createId);
       }
       setDialogOpen(false);
+      setCreateId(null);
       await fetchItineraries();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save trip guide");
@@ -174,6 +188,26 @@ export default function AdminItinerariesPage() {
       days: prev.days.map((d, i) =>
         i === index ? { ...d, [field]: value } : d
       ),
+    }));
+  }
+
+  function addGallerySlot() {
+    setForm((prev) => ({ ...prev, gallery: [...prev.gallery, ""] }));
+  }
+
+  function updateGalleryItem(index: number, url: string) {
+    setForm((prev) => ({
+      ...prev,
+      gallery: prev.gallery.map((u, i) => (i === index ? url : u)),
+    }));
+  }
+
+  async function removeGalleryItem(index: number) {
+    const url = form.gallery[index];
+    await tryDeleteObjectByUrl(url);
+    setForm((prev) => ({
+      ...prev,
+      gallery: prev.gallery.filter((_, i) => i !== index),
     }));
   }
 
@@ -440,29 +474,75 @@ export default function AdminItinerariesPage() {
 
             <Separator />
 
-            <div className="grid gap-2">
-              <Label htmlFor="coverImage">Cover Image URL</Label>
-              <Input
-                id="coverImage"
+            {resourceId ? (
+              <MediaUploadField
+                label="Cover image"
                 value={form.coverImage}
-                onChange={(e) => updateField("coverImage", e.target.value)}
-                placeholder="https://..."
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="gallery">Gallery URLs (comma-separated)</Label>
-              <Input
-                id="gallery"
-                value={form.gallery.join(", ")}
-                onChange={(e) =>
-                  updateField(
-                    "gallery",
-                    e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
-                  )
+                onUrlChange={(url) => updateField("coverImage", url)}
+                buildStoragePath={(f) =>
+                  `itineraries/${resourceId}/cover.${fileExtension(f)}`
                 }
-                placeholder="https://img1.jpg, https://img2.jpg"
+                previousUrlForReplace={form.coverImage}
+                helpText="Replaces the previous file in Storage when you upload again."
               />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Open create dialog to enable uploads.
+              </p>
+            )}
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Gallery</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addGallerySlot}
+                  disabled={!resourceId}
+                >
+                  <Plus className="size-3.5" />
+                  Add image
+                </Button>
+              </div>
+              {form.gallery.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Optional images. Add a slot, then upload or paste a URL.
+                </p>
+              )}
+              {form.gallery.map((gUrl, gi) => (
+                <div
+                  key={gi}
+                  className="flex flex-col gap-2 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-start"
+                >
+                  <div className="min-w-0 flex-1">
+                    {resourceId ? (
+                      <MediaUploadField
+                        label={`Image ${gi + 1}`}
+                        value={gUrl}
+                        onUrlChange={(url) => updateGalleryItem(gi, url)}
+                        buildStoragePath={(f) =>
+                          `itineraries/${resourceId}/gallery/${gi}.${fileExtension(
+                            f
+                          )}`
+                        }
+                        previousUrlForReplace={gUrl}
+                        showImagePreview
+                      />
+                    ) : null}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => void removeGalleryItem(gi)}
+                  >
+                    <Trash2 className="size-3.5" />
+                    Remove
+                  </Button>
+                </div>
+              ))}
             </div>
 
             <div className="flex items-center gap-3">

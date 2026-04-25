@@ -58,3 +58,110 @@ export interface Order {
   status: "pending" | "completed" | "failed";
   createdAt: Date;
 }
+
+export type HeroMode = "gradient" | "image" | "video";
+
+export interface HomePageHero {
+  mode: HeroMode;
+  mediaUrl: string;
+  eyebrow: string;
+  titleLine1: string;
+  titleItalic: string;
+  titleLine2: string;
+  subtitle: string;
+  primaryCtaLabel: string;
+  primaryCtaHref: string;
+  secondaryCtaLabel: string;
+  secondaryCtaHref: string;
+}
+
+export interface HomeDestinationCard {
+  region: string;
+  title: string;
+  blurb: string;
+  href: string;
+}
+
+export interface HomeWhereWeGo {
+  label: string;
+  titleLine1: string;
+  titleItalic: string;
+  titleLine2: string;
+  brazil: HomeDestinationCard;
+  australia: HomeDestinationCard;
+}
+
+export interface HomeFeaturedItinerary {
+  title: string;
+  description: string;
+  duration: string;
+  price: string;
+  gradient: string;
+  location: string;
+  href: string;
+}
+
+export interface HomeFeaturedBlock {
+  label: string;
+  titleLine1: string;
+  titleItalic: string;
+  viewAllLabel: string;
+  viewAllHref: string;
+  items: HomeFeaturedItinerary[];
+}
+
+export interface HomeUgcCard {
+  tag: string;
+  title: string;
+  gradient: string;
+  aspect: string;
+  href: string;
+}
+
+export interface HomeUgcBlock {
+  label: string;
+  titleLine1: string;
+  titleItalic: string;
+  viewAllLabel: string;
+  viewAllHref: string;
+  items: HomeUgcCard[];
+}
+
+export interface HomePartnershipService {
+  name: string;
+  description: string;
+  gradient: string;
+}
+
+export interface HomePartnershipsBlock {
+  label: string;
+  titleLine1: string;
+  titleItalic: string;
+  workWithLabel: string;
+  workWithHref: string;
+  services: HomePartnershipService[];
+}
+
+export interface HomeTestimonial {
+  quote: string;
+  attribution: string;
+}
+
+export interface HomeFinalCta {
+  label: string;
+  titleLine1: string;
+  titleItalic: string;
+  body: string;
+  ctaLabel: string;
+  ctaHref: string;
+}
+
+export interface HomePageSettings {
+  hero: HomePageHero;
+  whereWeGo: HomeWhereWeGo;
+  featured: HomeFeaturedBlock;
+  ugc: HomeUgcBlock;
+  partnerships: HomePartnershipsBlock;
+  testimonial: HomeTestimonial;
+  finalCta: HomeFinalCta;
+}

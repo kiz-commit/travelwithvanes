@@ -6,7 +6,10 @@ import {
   createUGCPost,
   updateUGCPost,
   deleteUGCPost,
+  newEntityId,
 } from "@/lib/firestore";
+import { MediaUploadField } from "@/components/admin/media-upload-field";
+import { fileExtension, tryDeleteObjectByUrl } from "@/lib/storage-upload";
 import type { UGCPost } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +67,7 @@ export default function AdminUGCPage() {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [createId, setCreateId] = useState<string | null>(null);
   const [form, setForm] = useState<UGCFormData>(emptyForm);
 
   const fetchPosts = useCallback(async () => {
@@ -87,11 +91,13 @@ export default function AdminUGCPage() {
 
   function openCreate() {
     setEditingId(null);
+    setCreateId(newEntityId("ugc_posts"));
     setForm({ ...emptyForm, publishedAt: new Date() });
     setDialogOpen(true);
   }
 
   function openEdit(item: UGCPost) {
+    setCreateId(null);
     setEditingId(item.id);
     setForm({
       title: item.title,
@@ -105,6 +111,8 @@ export default function AdminUGCPage() {
     setDialogOpen(true);
   }
 
+  const resourceId = editingId ?? createId;
+
   async function handleSave() {
     try {
       setSaving(true);
@@ -112,9 +120,14 @@ export default function AdminUGCPage() {
       if (editingId) {
         await updateUGCPost(editingId, form);
       } else {
-        await createUGCPost(form);
+        if (!createId) {
+          setError("Internal error: missing new post id. Close and try again.");
+          return;
+        }
+        await createUGCPost(form, createId);
       }
       setDialogOpen(false);
+      setCreateId(null);
       await fetchPosts();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save UGC post");
@@ -145,6 +158,26 @@ export default function AdminUGCPage() {
       }
       return next;
     });
+  }
+
+  function addMediaSlot() {
+    setForm((prev) => ({ ...prev, mediaUrls: [...prev.mediaUrls, ""] }));
+  }
+
+  function updateMediaItem(index: number, url: string) {
+    setForm((prev) => ({
+      ...prev,
+      mediaUrls: prev.mediaUrls.map((u, i) => (i === index ? url : u)),
+    }));
+  }
+
+  async function removeMediaItem(index: number) {
+    const url = form.mediaUrls[index];
+    await tryDeleteObjectByUrl(url);
+    setForm((prev) => ({
+      ...prev,
+      mediaUrls: prev.mediaUrls.filter((_, i) => i !== index),
+    }));
   }
 
   return (
@@ -276,30 +309,73 @@ export default function AdminUGCPage() {
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="coverImage">Cover Image URL</Label>
-              <Input
-                id="coverImage"
+            {resourceId ? (
+              <MediaUploadField
+                label="Cover image"
                 value={form.coverImage}
-                onChange={(e) => updateField("coverImage", e.target.value)}
-                placeholder="https://..."
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="mediaUrls">Media URLs (comma-separated)</Label>
-              <Input
-                id="mediaUrls"
-                value={form.mediaUrls.join(", ")}
-                onChange={(e) =>
-                  updateField(
-                    "mediaUrls",
-                    e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
-                  )
+                onUrlChange={(url) => updateField("coverImage", url)}
+                buildStoragePath={(f) =>
+                  `ugc/${resourceId}/cover.${fileExtension(f)}`
                 }
-                placeholder="https://img1.jpg, https://video1.mp4"
+                previousUrlForReplace={form.coverImage}
+                inputProps={{ accept: "image/*" }}
               />
-            </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Open create dialog to enable uploads.
+              </p>
+            )}
+
+            {resourceId ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Media (images or video)</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addMediaSlot}
+                  >
+                    <Plus className="size-3.5" />
+                    Add file
+                  </Button>
+                </div>
+                {form.mediaUrls.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Optional gallery. Add a slot, then upload or paste a URL.
+                  </p>
+                )}
+                {form.mediaUrls.map((mUrl, mi) => (
+                  <div
+                    key={mi}
+                    className="flex flex-col gap-2 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-start"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <MediaUploadField
+                        label={`Media ${mi + 1}`}
+                        value={mUrl}
+                        onUrlChange={(url) => updateMediaItem(mi, url)}
+                        buildStoragePath={(f) =>
+                          `ugc/${resourceId}/media/${mi}.${fileExtension(f)}`
+                        }
+                        previousUrlForReplace={mUrl}
+                        inputProps={{ accept: "image/*,video/*" }}
+                        showImagePreview
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void removeMediaItem(mi)}
+                    >
+                      <Trash2 className="size-3.5" />
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
 
             <div className="grid gap-2">
               <Label htmlFor="tags">Tags (comma-separated)</Label>

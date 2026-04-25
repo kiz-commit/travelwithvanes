@@ -4,7 +4,6 @@ import {
   doc,
   getDocs,
   getDoc,
-  addDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -13,7 +12,7 @@ import {
   Timestamp,
   setDoc,
 } from "firebase/firestore";
-import { Itinerary, Product, UGCPost } from "@/types";
+import { Itinerary, Product, UGCPost, type HomePageSettings } from "@/types";
 
 function convertTimestamps<T>(
   data: Record<string, unknown>
@@ -67,14 +66,18 @@ export async function getItineraryById(
   return convertTimestamps<Itinerary>({ id: d.id, ...d.data() });
 }
 
+/**
+ * Create with a pre-generated id so Storage paths (itineraries/{id}/...) work before save.
+ */
 export async function createItinerary(
-  data: Omit<Itinerary, "id" | "createdAt">
+  data: Omit<Itinerary, "id" | "createdAt">,
+  newId: string
 ): Promise<string> {
-  const ref = await addDoc(itinerariesRef, {
+  await setDoc(doc(db, "itineraries", newId), {
     ...data,
     createdAt: Timestamp.now(),
   });
-  return ref.id;
+  return newId;
 }
 
 export async function updateItinerary(
@@ -129,13 +132,14 @@ export async function getProductById(id: string): Promise<Product | null> {
 }
 
 export async function createProduct(
-  data: Omit<Product, "id" | "createdAt">
+  data: Omit<Product, "id" | "createdAt">,
+  newId: string
 ): Promise<string> {
-  const ref = await addDoc(productsRef, {
+  await setDoc(doc(db, "products", newId), {
     ...data,
     createdAt: Timestamp.now(),
   });
-  return ref.id;
+  return newId;
 }
 
 export async function updateProduct(
@@ -186,10 +190,11 @@ export async function getUGCPostById(id: string): Promise<UGCPost | null> {
 }
 
 export async function createUGCPost(
-  data: Omit<UGCPost, "id">
+  data: Omit<UGCPost, "id">,
+  newId: string
 ): Promise<string> {
-  const ref = await addDoc(ugcPostsRef, data);
-  return ref.id;
+  await setDoc(doc(db, "ugc_posts", newId), data);
+  return newId;
 }
 
 export async function updateUGCPost(
@@ -201,4 +206,35 @@ export async function updateUGCPost(
 
 export async function deleteUGCPost(id: string): Promise<void> {
   await deleteDoc(doc(db, "ugc_posts", id));
+}
+
+// --------------- New entity ids (setDoc) ---------------
+
+export function newEntityId(
+  which: "itineraries" | "products" | "ugc_posts"
+): string {
+  const name =
+    which === "itineraries"
+      ? "itineraries"
+      : which === "products"
+        ? "products"
+        : "ugc_posts";
+  return doc(collection(db, name)).id;
+}
+
+// --------------- Site settings (homepage) ---------------
+
+const siteSettingsRef = collection(db, "site_settings");
+const homePageDoc = doc(siteSettingsRef, "homepage");
+
+export async function getHomePageSettings(): Promise<HomePageSettings | null> {
+  const d = await getDoc(homePageDoc);
+  if (!d.exists()) return null;
+  return d.data() as HomePageSettings;
+}
+
+export async function setHomePageSettings(
+  partial: Partial<HomePageSettings>
+): Promise<void> {
+  await setDoc(homePageDoc, partial, { merge: true });
 }

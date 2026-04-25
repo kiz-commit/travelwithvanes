@@ -6,7 +6,11 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  newEntityId,
 } from "@/lib/firestore";
+import { MediaUploadField } from "@/components/admin/media-upload-field";
+import { fileExtension, tryDeleteObjectByUrl } from "@/lib/storage-upload";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import type { Product } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +26,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { TiptapEditor } from "@/components/admin/tiptap-editor";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 
 type ProductFormData = Omit<Product, "id" | "createdAt">;
 
@@ -52,6 +55,7 @@ export default function AdminProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [createId, setCreateId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductFormData>(emptyForm);
 
   const fetchProducts = useCallback(async () => {
@@ -75,11 +79,13 @@ export default function AdminProductsPage() {
 
   function openCreate() {
     setEditingId(null);
+    setCreateId(newEntityId("products"));
     setForm(emptyForm);
     setDialogOpen(true);
   }
 
   function openEdit(item: Product) {
+    setCreateId(null);
     setEditingId(item.id);
     setForm({
       title: item.title,
@@ -93,6 +99,8 @@ export default function AdminProductsPage() {
     setDialogOpen(true);
   }
 
+  const resourceId = editingId ?? createId;
+
   async function handleSave() {
     try {
       setSaving(true);
@@ -100,9 +108,14 @@ export default function AdminProductsPage() {
       if (editingId) {
         await updateProduct(editingId, form);
       } else {
-        await createProduct(form);
+        if (!createId) {
+          setError("Internal error: missing new product id. Close and try again.");
+          return;
+        }
+        await createProduct(form, createId);
       }
       setDialogOpen(false);
+      setCreateId(null);
       await fetchProducts();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save product");
@@ -133,6 +146,26 @@ export default function AdminProductsPage() {
       }
       return next;
     });
+  }
+
+  function addImageSlot() {
+    setForm((prev) => ({ ...prev, images: [...prev.images, ""] }));
+  }
+
+  function updateImageItem(index: number, url: string) {
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images.map((u, i) => (i === index ? url : u)),
+    }));
+  }
+
+  async function removeImageItem(index: number) {
+    const url = form.images[index];
+    await tryDeleteObjectByUrl(url);
+    setForm((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
   }
 
   return (
@@ -283,20 +316,61 @@ export default function AdminProductsPage() {
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="images">Image URLs (comma-separated)</Label>
-              <Input
-                id="images"
-                value={form.images.join(", ")}
-                onChange={(e) =>
-                  updateField(
-                    "images",
-                    e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
-                  )
-                }
-                placeholder="https://img1.jpg, https://img2.jpg"
-              />
-            </div>
+            {resourceId ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Product images</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addImageSlot}
+                  >
+                    <Plus className="size-3.5" />
+                    Add image
+                  </Button>
+                </div>
+                {form.images.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Add a slot, then upload or paste a URL.
+                  </p>
+                )}
+                {form.images.map((imgUrl, ii) => (
+                  <div
+                    key={ii}
+                    className="flex flex-col gap-2 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-start"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <MediaUploadField
+                        label={`Image ${ii + 1}`}
+                        value={imgUrl}
+                        onUrlChange={(url) => updateImageItem(ii, url)}
+                        buildStoragePath={(f) =>
+                          `products/${resourceId}/images/${ii}.${fileExtension(
+                            f
+                          )}`
+                        }
+                        previousUrlForReplace={imgUrl}
+                        showImagePreview
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void removeImageItem(ii)}
+                    >
+                      <Trash2 className="size-3.5" />
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Open create dialog to enable uploads.
+              </p>
+            )}
 
             <div className="flex items-center gap-3">
               <Switch

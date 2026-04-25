@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 
 const navLinks = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/homepage", label: "Homepage" },
   { href: "/admin/itineraries", label: "Trip Guides" },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/ugc", label: "UGC" },
@@ -29,9 +30,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-    if (pathname !== "/admin/login") {
-      router.push("/admin/login");
+    if (pathname === "/admin/login") {
+      return <>{children}</>;
     }
+    router.push("/admin/login");
     return null;
   }
 

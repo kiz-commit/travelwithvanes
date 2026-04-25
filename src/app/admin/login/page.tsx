@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type FormEvent } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, isFirebaseConfigValid } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,6 +45,24 @@ export default function AdminLoginPage() {
     return (
       <div className="flex min-h-screen items-center justify-center pt-24">
         <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!isFirebaseConfigValid()) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 pt-24">
+        <Card className="w-full max-w-md border-destructive/50">
+          <CardContent className="pt-6">
+            <h1 className="font-heading text-2xl font-semibold">Firebase not configured</h1>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Set all <code className="rounded bg-muted px-1">NEXT_PUBLIC_FIREBASE_*</code>{" "}
+              environment variables in Vercel (or <code className="rounded bg-muted px-1">.env.local</code>{" "}
+              locally), then redeploy. Copy values from Firebase Console → Project settings →
+              Your apps.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

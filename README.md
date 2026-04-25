@@ -63,8 +63,9 @@ Required variables:
 2. Enable **Firestore Database** (start in test mode for development)
 3. Enable **Authentication** with Email/Password provider
 4. Enable **Storage**
-5. Create an admin user in Firebase Auth (email/password)
-6. Copy your Firebase config values into `.env.local`
+5. **Storage security rules** — The repo includes [`storage.rules`](storage.rules). In the Firebase console under Storage → Rules, allow public **read** and authenticated **write** to paths `itineraries/`, `products/`, `ugc/`, and `site/` (admin uploads and homepage media). You can paste the file contents and publish. The admin must be signed in to Firebase Auth when uploading.
+6. Create an admin user in Firebase Auth (email/password)
+7. Copy your Firebase config values into `.env.local`
 
 ### 4. Set up Stripe
 

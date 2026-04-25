@@ -12,6 +12,16 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:0:web:0",
 };
 
+/** True when all public Firebase web config values are set (not placeholder). */
+export function isFirebaseConfigValid(): boolean {
+  return (
+    Boolean(firebaseConfig.projectId) &&
+    Boolean(firebaseConfig.authDomain) &&
+    Boolean(firebaseConfig.apiKey) &&
+    firebaseConfig.apiKey !== "placeholder"
+  );
+}
+
 function getApp(): FirebaseApp {
   return getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 }

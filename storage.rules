@@ -1,0 +1,18 @@
+rules_version = '2';
+
+// Copy into Firebase Console → Storage → Rules, or use Firebase CLI to deploy.
+// Public read: site assets and images load without auth. Writes restricted to
+// signed-in users (your admin). Tighten with custom claims if you add roles.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{path=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && (path.startsWith('itineraries/')
+            || path.startsWith('products/')
+            || path.startsWith('ugc/')
+            || path.startsWith('site/'));
+    }
+  }
+}
