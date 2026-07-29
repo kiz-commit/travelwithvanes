@@ -8,6 +8,10 @@ import { UGCPost } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { MediaDisplay } from "@/components/media/media-display";
+import { VideoTile } from "@/components/media/video-tile";
+import { postPreviewUrl } from "@/lib/portfolio-media";
+import { hasDisplayableMedia, isVideoUrl } from "@/lib/media-utils";
 import { ArrowLeft, Share2 } from "lucide-react";
 
 export default function UGCPostPage() {
@@ -48,13 +52,26 @@ export default function UGCPostPage() {
       ? post.publishedAt.toLocaleDateString()
       : new Date(post.publishedAt).toLocaleDateString();
 
+  const heroUrl = postPreviewUrl(post);
+
   return (
     <main>
-      {/* Hero */}
-      <section className="relative flex h-[50vh] min-h-[360px] items-end overflow-hidden bg-gradient-to-br from-[#071f3d] via-brazil-blue to-sky">
-        <div className="absolute inset-0 bg-black/40" />
+      <section className="relative flex min-h-[50vh] items-end overflow-hidden bg-gradient-to-br from-[#071f3d] via-brazil-blue to-sky">
+        {heroUrl && (
+          <div className="absolute inset-0">
+            <MediaDisplay
+              url={heroUrl}
+              alt={post.title}
+              className="h-full w-full scale-105 object-cover"
+              muted
+              loop
+              autoPlay={isVideoUrl(heroUrl)}
+            />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 mx-auto w-full max-w-4xl px-4 pb-12">
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="mb-4 flex flex-wrap gap-2">
             {post.tags.map((tag) => (
               <Badge key={tag} className="bg-white/90 text-foreground">
                 {tag}
@@ -70,7 +87,6 @@ export default function UGCPostPage() {
         </div>
       </section>
 
-      {/* Content */}
       <section className="mx-auto max-w-3xl px-4 py-16">
         <div
           className="prose-like text-lg leading-relaxed text-foreground [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:font-heading [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:mb-5 [&_ul]:mb-5 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:mb-5 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-brazil-blue [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-sky [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_img]:rounded-xl [&_img]:my-6"
@@ -78,23 +94,32 @@ export default function UGCPostPage() {
         />
       </section>
 
-      {/* Media gallery */}
       {post.mediaUrls.length > 0 && (
         <section className="mx-auto max-w-5xl px-4 pb-16">
-          <h2 className="font-heading text-2xl font-bold mb-6">Gallery</h2>
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
+          <h2 className="mb-6 font-heading text-2xl font-bold">Gallery</h2>
+          <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
             {post.mediaUrls.map((url, i) => {
-              const gradients = [
-                "from-brazil-blue to-sky",
-                "from-ochre to-brazil-blue",
-                "from-sky to-brazil-blue",
-                "from-brazil-green to-sky",
-              ];
+              if (!hasDisplayableMedia(url)) return null;
+              const isVideo =
+                isVideoUrl(url) || url.includes("youtube") || url.includes("vimeo");
               return (
-                <div
-                  key={url || i}
-                  className={`aspect-square rounded-xl bg-gradient-to-br ${gradients[i % gradients.length]}`}
-                />
+                <div key={url || i} className="mb-4 break-inside-avoid">
+                  {isVideo ? (
+                    <VideoTile
+                      url={url}
+                      aspectClassName="aspect-[9/16]"
+                      showOverlayText={false}
+                    />
+                  ) : (
+                    <div className="overflow-hidden rounded-2xl">
+                      <MediaDisplay
+                        url={url}
+                        alt=""
+                        className="aspect-[4/5] w-full"
+                      />
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -103,7 +128,6 @@ export default function UGCPostPage() {
 
       <Separator className="mx-auto max-w-3xl" />
 
-      {/* Share + back */}
       <section className="mx-auto max-w-3xl px-4 py-12">
         <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
           <div>

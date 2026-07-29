@@ -9,7 +9,7 @@ import {
   newEntityId,
 } from "@/lib/firestore";
 import { MediaUploadField } from "@/components/admin/media-upload-field";
-import { fileExtension, tryDeleteObjectByUrl } from "@/lib/storage-upload";
+import { tryDeleteObjectByUrl } from "@/lib/storage-upload";
 import type { Itinerary, ItineraryBlockType, ItineraryDay } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -562,11 +562,6 @@ export default function AdminItinerariesPage() {
                 label="Cover image"
                 value={form.coverImage}
                 onUrlChange={(url) => updateField("coverImage", url)}
-                buildStoragePath={(f) =>
-                  `itineraries/${resourceId}/cover.${fileExtension(f)}`
-                }
-                previousUrlForReplace={form.coverImage}
-                helpText="Replaces the previous file in Storage when you upload again."
               />
             ) : (
               <p className="text-sm text-muted-foreground">
@@ -604,12 +599,6 @@ export default function AdminItinerariesPage() {
                         label={`Image ${gi + 1}`}
                         value={gUrl}
                         onUrlChange={(url) => updateGalleryItem(gi, url)}
-                        buildStoragePath={(f) =>
-                          `itineraries/${resourceId}/gallery/${gi}.${fileExtension(
-                            f
-                          )}`
-                        }
-                        previousUrlForReplace={gUrl}
                         showImagePreview
                       />
                     ) : null}

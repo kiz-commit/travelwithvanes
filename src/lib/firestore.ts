@@ -12,7 +12,7 @@ import {
   Timestamp,
   setDoc,
 } from "firebase/firestore";
-import { Itinerary, Product, UGCPost, type HomePageSettings } from "@/types";
+import { Itinerary, Product, UGCPost, type HomePageSettings, type MediaAsset } from "@/types";
 import { normalizeItinerary } from "@/lib/itinerary-migrate";
 
 function convertTimestamps<T>(
@@ -252,4 +252,35 @@ export async function setHomePageSettings(
   partial: Partial<HomePageSettings>
 ): Promise<void> {
   await setDoc(homePageDoc, partial, { merge: true });
+}
+
+// --------------- Media library ---------------
+
+const mediaAssetsRef = collection(db, "media_assets");
+
+export function newMediaAssetId(): string {
+  return doc(mediaAssetsRef).id;
+}
+
+export async function getAllMediaAssets(): Promise<MediaAsset[]> {
+  const q = query(mediaAssetsRef, orderBy("uploadedAt", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) =>
+    convertTimestamps<MediaAsset>({ id: d.id, ...d.data() })
+  );
+}
+
+export async function createMediaAsset(
+  data: Omit<MediaAsset, "id">,
+  newId: string
+): Promise<string> {
+  await setDoc(doc(mediaAssetsRef, newId), {
+    ...data,
+    uploadedAt: Timestamp.fromDate(data.uploadedAt),
+  });
+  return newId;
+}
+
+export async function deleteMediaAsset(id: string): Promise<void> {
+  await deleteDoc(doc(mediaAssetsRef, id));
 }

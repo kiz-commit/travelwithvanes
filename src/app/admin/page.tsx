@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Home, MapPin, ShoppingBag, Video } from "lucide-react";
+import { Home, MapPin, ShoppingBag, Video, FolderOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,6 +66,20 @@ export default function AdminDashboardPage() {
             </p>
             <Button variant="outline" size="sm" render={<Link href="/admin/homepage" />}>
               Edit homepage
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <FolderOpen className="size-4" />
+              <span className="text-sm font-medium">Media library</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Upload photos and videos once, then reuse them on the homepage, UGC, and elsewhere.
+            </p>
+            <Button variant="outline" size="sm" render={<Link href="/admin/media" />}>
+              Manage media
             </Button>
           </CardContent>
         </Card>

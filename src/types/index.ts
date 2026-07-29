@@ -71,6 +71,20 @@ export interface UGCPost {
   publishedAt: Date;
 }
 
+export type MediaAssetKind = "image" | "video";
+
+export interface MediaAsset {
+  id: string;
+  url: string;
+  storagePath: string;
+  filename: string;
+  mimeType: string;
+  kind: MediaAssetKind;
+  sizeBytes: number;
+  label: string;
+  uploadedAt: Date;
+}
+
 export interface Order {
   id: string;
   stripeSessionId: string;
@@ -140,6 +154,7 @@ export interface HomeUgcCard {
   gradient: string;
   aspect: string;
   href: string;
+  mediaUrl?: string;
 }
 
 export interface HomeUgcBlock {

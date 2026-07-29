@@ -10,7 +10,6 @@ import {
 import { getHomePageSettings, setHomePageSettings } from "@/lib/firestore";
 import { DEFAULT_HOME_PAGE_SETTINGS, mergeWithHomePageDefaults } from "@/lib/homepage-defaults";
 import { MediaUploadField } from "@/components/admin/media-upload-field";
-import { fileExtension } from "@/lib/storage-upload";
 import type { HeroMode, HomePageSettings } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -127,8 +126,6 @@ export default function AdminHomePagePage() {
             onUrlChange={(url) =>
               setForm((f) => (f ? { ...f, hero: { ...f.hero, mediaUrl: url } } : f))
             }
-            buildStoragePath={(f) => `site/home/hero.${fileExtension(f)}`}
-            previousUrlForReplace={form.hero.mediaUrl}
             inputProps={{
               accept:
                 form.hero.mode === "video"
@@ -753,28 +750,45 @@ function CardSection({
             })
           )}
           {section === "ugc" && (
-            (["tag", "title", "gradient", "aspect", "href"] as const).map(
-              (k) => {
-                const it = item as HomePageSettings["ugc"]["items"][0];
-                return (
-                  <div className="grid gap-1" key={k}>
-                    <Label className="text-xs font-mono">{k}</Label>
-                    <Input
-                      value={it[k]}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setForm((f) => {
-                          if (!f) return f;
-                          const items = [...f.ugc.items];
-                          items[i] = { ...items[i]!, [k]: v };
-                          return { ...f, ugc: { ...f.ugc, items } };
-                        });
-                      }}
-                    />
-                  </div>
-                );
-              }
-            )
+            <>
+              {(["tag", "title", "gradient", "aspect", "href"] as const).map(
+                (k) => {
+                  const it = item as HomePageSettings["ugc"]["items"][0];
+                  return (
+                    <div className="grid gap-1" key={k}>
+                      <Label className="text-xs font-mono">{k}</Label>
+                      <Input
+                        value={it[k]}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setForm((f) => {
+                            if (!f) return f;
+                            const items = [...f.ugc.items];
+                            items[i] = { ...items[i]!, [k]: v };
+                            return { ...f, ugc: { ...f.ugc, items } };
+                          });
+                        }}
+                      />
+                    </div>
+                  );
+                }
+              )}
+              <MediaUploadField
+                label="Photo or video"
+                value={
+                  (item as HomePageSettings["ugc"]["items"][0]).mediaUrl ?? ""
+                }
+                onUrlChange={(url) =>
+                  setForm((f) => {
+                    if (!f) return f;
+                    const items = [...f.ugc.items];
+                    items[i] = { ...items[i]!, mediaUrl: url };
+                    return { ...f, ugc: { ...f.ugc, items } };
+                  })
+                }
+                inputProps={{ accept: "image/*,video/*" }}
+              />
+            </>
           )}
         </div>
       ))}

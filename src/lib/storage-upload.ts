@@ -60,6 +60,8 @@ export async function tryDeleteObjectByUrl(
   if (!url || !isOurStorageUrl(url)) return;
   const r = refFromDownloadUrl(storage, url);
   if (!r) return;
+  // Library assets are shared — only delete from the Media Library admin page.
+  if (r.fullPath.startsWith("media/")) return;
   try {
     await deleteObject(r);
   } catch {

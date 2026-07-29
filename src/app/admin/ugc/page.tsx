@@ -9,7 +9,7 @@ import {
   newEntityId,
 } from "@/lib/firestore";
 import { MediaUploadField } from "@/components/admin/media-upload-field";
-import { fileExtension, tryDeleteObjectByUrl } from "@/lib/storage-upload";
+import { tryDeleteObjectByUrl } from "@/lib/storage-upload";
 import type { UGCPost } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -317,73 +317,57 @@ export default function AdminUGCPage() {
               />
             </div>
 
-            {resourceId ? (
-              <MediaUploadField
-                label="Cover image"
-                value={form.coverImage}
-                onUrlChange={(url) => updateField("coverImage", url)}
-                buildStoragePath={(f) =>
-                  `ugc/${resourceId}/cover.${fileExtension(f)}`
-                }
-                previousUrlForReplace={form.coverImage}
-                inputProps={{ accept: "image/*" }}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Open create dialog to enable uploads.
-              </p>
-            )}
+            <MediaUploadField
+              label="Cover image"
+              value={form.coverImage}
+              onUrlChange={(url) => updateField("coverImage", url)}
+              inputProps={{ accept: "image/*" }}
+            />
 
-            {resourceId ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label>Media (images or video)</Label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Media (images or video)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addMediaSlot}
+                >
+                  <Plus className="size-3.5" />
+                  Add file
+                </Button>
+              </div>
+              {form.mediaUrls.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Optional gallery. Add a slot, then upload or pick from the library.
+                </p>
+              )}
+              {form.mediaUrls.map((mUrl, mi) => (
+                <div
+                  key={mi}
+                  className="flex flex-col gap-2 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-start"
+                >
+                  <div className="min-w-0 flex-1">
+                    <MediaUploadField
+                      label={`Media ${mi + 1}`}
+                      value={mUrl}
+                      onUrlChange={(url) => updateMediaItem(mi, url)}
+                      inputProps={{ accept: "image/*,video/*" }}
+                      showImagePreview
+                    />
+                  </div>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    onClick={addMediaSlot}
+                    onClick={() => void removeMediaItem(mi)}
                   >
-                    <Plus className="size-3.5" />
-                    Add file
+                    <Trash2 className="size-3.5" />
+                    Remove
                   </Button>
                 </div>
-                {form.mediaUrls.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Optional gallery. Add a slot, then upload or paste a URL.
-                  </p>
-                )}
-                {form.mediaUrls.map((mUrl, mi) => (
-                  <div
-                    key={mi}
-                    className="flex flex-col gap-2 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-start"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <MediaUploadField
-                        label={`Media ${mi + 1}`}
-                        value={mUrl}
-                        onUrlChange={(url) => updateMediaItem(mi, url)}
-                        buildStoragePath={(f) =>
-                          `ugc/${resourceId}/media/${mi}.${fileExtension(f)}`
-                        }
-                        previousUrlForReplace={mUrl}
-                        inputProps={{ accept: "image/*,video/*" }}
-                        showImagePreview
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => void removeMediaItem(mi)}
-                    >
-                      <Trash2 className="size-3.5" />
-                      Remove
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : null}
+              ))}
+            </div>
 
             <div className="grid gap-2">
               <Label htmlFor="tags">Tags (comma-separated)</Label>

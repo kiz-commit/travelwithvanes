@@ -20,6 +20,11 @@ import { getUGCPosts } from "@/lib/firestore";
 import { UGCPost } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { VideoTile } from "@/components/media/video-tile";
+import {
+  collectPortfolioMedia,
+  postPreviewUrl,
+} from "@/lib/portfolio-media";
 
 const niches = [
   "Hotels & stays",
@@ -111,6 +116,8 @@ export default function UGCFeedPage() {
       .then(setPosts)
       .finally(() => setLoading(false));
   }, []);
+
+  const portfolioMedia = collectPortfolioMedia(posts);
 
   return (
     <main className="bg-[#fffaf4]">
@@ -221,29 +228,44 @@ export default function UGCFeedPage() {
           </div>
 
           <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
-            {samples.map((sample) => (
-              <div
-                key={sample.title}
-                className={`mb-5 break-inside-avoid rounded-2xl ${sample.color} ${sample.size} p-5 text-white shadow-sm`}
-              >
-                <div className="flex h-full flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] backdrop-blur">
-                      {sample.type}
-                    </span>
-                    <Play className="size-9 fill-white rounded-full bg-white/20 p-2" />
+            {portfolioMedia.length > 0
+              ? portfolioMedia.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className="mb-5 block break-inside-avoid transition hover:-translate-y-1"
+                  >
+                    <VideoTile
+                      url={item.url}
+                      tag={item.tag}
+                      title={item.title}
+                      aspectClassName="aspect-[9/16] min-h-80"
+                    />
+                  </Link>
+                ))
+              : samples.map((sample) => (
+                  <div
+                    key={sample.title}
+                    className={`mb-5 break-inside-avoid rounded-2xl ${sample.color} ${sample.size} p-5 text-white shadow-sm`}
+                  >
+                    <div className="flex h-full flex-col justify-between">
+                      <div className="flex items-center justify-between">
+                        <span className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] backdrop-blur">
+                          {sample.type}
+                        </span>
+                        <Play className="size-9 fill-white rounded-full bg-white/20 p-2" />
+                      </div>
+                      <div>
+                        <h3 className="text-3xl font-semibold leading-none">
+                          {sample.title}
+                        </h3>
+                        <p className="mt-4 text-sm font-medium text-white/75">
+                          {sample.format}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-3xl font-semibold leading-none">
-                      {sample.title}
-                    </h3>
-                    <p className="mt-4 text-sm font-medium text-white/75">
-                      {sample.format}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+                ))}
           </div>
         </div>
       </section>
@@ -341,39 +363,43 @@ export default function UGCFeedPage() {
 
           {!loading && posts.length > 0 && (
             <div className="grid gap-5 md:grid-cols-3">
-              {posts.map((post, index) => (
-                <Link
-                  key={post.id}
-                  href={`/ugc/${post.slug}`}
-                  className="rounded-2xl border border-[#111827]/10 bg-[#fffaf4] p-5 transition hover:-translate-y-1 hover:shadow-xl"
-                >
-                  <div
-                    className={`mb-5 aspect-[4/3] rounded-xl ${
-                      index % 3 === 0
-                        ? "bg-[#f97316]"
-                        : index % 3 === 1
-                          ? "bg-[#0f766e]"
-                          : "bg-[#2563eb]"
-                    }`}
-                  />
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    {(post.tags.length ? post.tags : fallbackTags)
-                      .slice(0, 2)
-                      .map((tag) => (
-                        <Badge key={tag} variant="outline">
-                          {tag}
-                        </Badge>
-                      ))}
-                  </div>
-                  <h3 className="text-xl font-semibold leading-tight text-[#111827]">
-                    {post.title}
-                  </h3>
-                  <p className="mt-4 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[#2563eb]">
-                    View case study
-                    <ArrowRight className="size-4" />
-                  </p>
-                </Link>
-              ))}
+              {posts.map((post) => {
+                const previewUrl = postPreviewUrl(post);
+                return (
+                  <Link
+                    key={post.id}
+                    href={`/ugc/${post.slug}`}
+                    className="rounded-2xl border border-[#111827]/10 bg-[#fffaf4] p-5 transition hover:-translate-y-1 hover:shadow-xl"
+                  >
+                    {previewUrl ? (
+                      <VideoTile
+                        url={previewUrl}
+                        aspectClassName="mb-5 aspect-[4/3]"
+                        showOverlayText={false}
+                        className="rounded-xl"
+                      />
+                    ) : (
+                      <div className="mb-5 aspect-[4/3] rounded-xl bg-[#2563eb]" />
+                    )}
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {(post.tags.length ? post.tags : fallbackTags)
+                        .slice(0, 2)
+                        .map((tag) => (
+                          <Badge key={tag} variant="outline">
+                            {tag}
+                          </Badge>
+                        ))}
+                    </div>
+                    <h3 className="text-xl font-semibold leading-tight text-[#111827]">
+                      {post.title}
+                    </h3>
+                    <p className="mt-4 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[#2563eb]">
+                      View case study
+                      <ArrowRight className="size-4" />
+                    </p>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

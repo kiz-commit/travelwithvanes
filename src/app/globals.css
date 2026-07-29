@@ -177,6 +177,14 @@
     animation-delay: 3s;
   }
 
+  .hook-moment-bg {
+    animation: hook-moment-one 8.8s steps(1, end) both;
+    animation-delay: 3s;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
   .hook-moment-two {
     animation: hook-moment-two 8.8s ease both;
     animation-delay: 3s;
@@ -355,6 +363,7 @@
     .homepage-hook-stage,
     .homepage-attention-hook,
     .homepage-attention-ring,
+    .hook-moment-bg,
     .hook-line {
       animation: none;
     }

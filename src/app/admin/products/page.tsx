@@ -9,7 +9,7 @@ import {
   newEntityId,
 } from "@/lib/firestore";
 import { MediaUploadField } from "@/components/admin/media-upload-field";
-import { fileExtension, tryDeleteObjectByUrl } from "@/lib/storage-upload";
+import { tryDeleteObjectByUrl } from "@/lib/storage-upload";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import type { Product } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -353,12 +353,6 @@ export default function AdminProductsPage() {
                         label={`Image ${ii + 1}`}
                         value={imgUrl}
                         onUrlChange={(url) => updateImageItem(ii, url)}
-                        buildStoragePath={(f) =>
-                          `products/${resourceId}/images/${ii}.${fileExtension(
-                            f
-                          )}`
-                        }
-                        previousUrlForReplace={imgUrl}
                         showImagePreview
                       />
                     </div>

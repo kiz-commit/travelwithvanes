@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -15,6 +16,12 @@ import {
   Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MediaDisplay } from "@/components/media/media-display";
+import { VideoTile } from "@/components/media/video-tile";
+import { getHomePageSettings } from "@/lib/firestore";
+import { mergeWithHomePageDefaults } from "@/lib/homepage-defaults";
+import { hasDisplayableMedia } from "@/lib/media-utils";
+import type { HomePageSettings } from "@/types";
 
 const stats = [
   { value: "2", label: "home markets" },
@@ -85,6 +92,23 @@ const guideLinks = [
 ];
 
 export default function Home() {
+  const [settings, setSettings] = useState<HomePageSettings | null>(null);
+
+  useEffect(() => {
+    getHomePageSettings()
+      .then((raw) => setSettings(mergeWithHomePageDefaults(raw)))
+      .catch(() => setSettings(mergeWithHomePageDefaults(null)));
+  }, []);
+
+  const hero = settings?.hero;
+  const heroMedia = hero?.mediaUrl;
+  const showHeroMedia =
+    hero &&
+    hero.mode !== "gradient" &&
+    heroMedia &&
+    hasDisplayableMedia(heroMedia);
+  const ugcTiles = settings?.ugc.items ?? [];
+
   return (
     <>
       <div className="homepage-hook-stage">
@@ -135,22 +159,40 @@ export default function Home() {
             </div>
             <div className="absolute right-0 top-0 w-[78%] max-w-[430px] rounded-[2.4rem] bg-[#111827] p-4 shadow-[0_30px_100px_rgba(17,24,39,0.26)] sm:right-10">
               <div className="aspect-[9/16] overflow-hidden rounded-[1.8rem] bg-[#f97316]">
-                <div className="flex h-full flex-col justify-between p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <span className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] backdrop-blur">
-                      Brazil POV
-                    </span>
-                    <Play className="size-9 fill-white rounded-full bg-white/20 p-2" />
+                {showHeroMedia && hero?.mode === "video" ? (
+                  <MediaDisplay
+                    url={heroMedia!}
+                    alt="Hero video"
+                    className="h-full w-full"
+                    muted
+                    loop
+                    autoPlay
+                    playsInline
+                  />
+                ) : showHeroMedia && hero?.mode === "image" ? (
+                  <MediaDisplay
+                    url={heroMedia!}
+                    alt="Hero image"
+                    className="h-full w-full"
+                  />
+                ) : (
+                  <div className="flex h-full flex-col justify-between p-6 text-white">
+                    <div className="flex items-center justify-between">
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] backdrop-blur">
+                        Brazil POV
+                      </span>
+                      <Play className="size-9 fill-white rounded-full bg-white/20 p-2" />
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-white/70">
+                        TravelwithVanes
+                      </p>
+                      <h2 className="mt-3 text-5xl font-semibold leading-[0.92]">
+                        real travel, clean edits, useful angles
+                      </h2>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-white/70">
-                      TravelwithVanes
-                    </p>
-                    <h2 className="mt-3 text-5xl font-semibold leading-[0.92]">
-                      real travel, clean edits, useful angles
-                    </h2>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
             <div className="absolute bottom-4 left-4 grid w-[64%] gap-3 rounded-2xl bg-white p-4 shadow-[0_20px_70px_rgba(17,24,39,0.14)] sm:left-16 sm:w-72">
@@ -217,27 +259,45 @@ export default function Home() {
             </Link>
           </div>
           <div className="columns-1 gap-5 sm:columns-2 lg:columns-4">
-            {contentTiles.map((tile) => (
+            {(ugcTiles.some((t) => t.mediaUrl && hasDisplayableMedia(t.mediaUrl))
+              ? ugcTiles.filter((t) => t.mediaUrl && hasDisplayableMedia(t.mediaUrl))
+              : null
+            )?.map((tile) => (
               <Link
                 key={tile.title}
-                href="/ugc"
-                className={`mb-5 block break-inside-avoid overflow-hidden rounded-2xl ${tile.className} ${tile.height} p-5 text-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl`}
+                href={tile.href}
+                className="mb-5 block break-inside-avoid transition hover:-translate-y-1"
               >
-                <div className="flex h-full flex-col justify-between">
-                  <span className="w-fit rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] backdrop-blur">
-                    {tile.tag}
-                  </span>
-                  <div>
-                    <h3 className="text-2xl font-semibold leading-tight">
-                      {tile.title}
-                    </h3>
-                    <p className="mt-3 text-sm font-medium text-white/75">
-                      {tile.metric}
-                    </p>
-                  </div>
-                </div>
+                <VideoTile
+                  url={tile.mediaUrl!}
+                  tag={tile.tag}
+                  title={tile.title}
+                  aspectClassName={tile.aspect || "aspect-[9/16]"}
+                  className="shadow-sm"
+                />
               </Link>
-            ))}
+            )) ??
+              contentTiles.map((tile) => (
+                <Link
+                  key={tile.title}
+                  href="/ugc"
+                  className={`mb-5 block break-inside-avoid overflow-hidden rounded-2xl ${tile.className} ${tile.height} p-5 text-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl`}
+                >
+                  <div className="flex h-full flex-col justify-between">
+                    <span className="w-fit rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] backdrop-blur">
+                      {tile.tag}
+                    </span>
+                    <div>
+                      <h3 className="text-2xl font-semibold leading-tight">
+                        {tile.title}
+                      </h3>
+                      <p className="mt-3 text-sm font-medium text-white/75">
+                        {tile.metric}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
           </div>
         </div>
       </section>
@@ -369,10 +429,19 @@ export default function Home() {
         className="homepage-attention-hook fixed inset-0 z-[80] flex items-center justify-center overflow-hidden bg-[#111827] px-5 text-center text-white"
         aria-hidden="true"
       >
+        <div className="hook-moment-bg absolute inset-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/hook-moment-bg.png"
+            alt=""
+            className="h-full w-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
         <div className="homepage-attention-ring absolute size-[34rem] rounded-full border border-white/10" />
         <div className="homepage-attention-ring homepage-attention-ring-two absolute size-[22rem] rounded-full border border-[#facc15]/20" />
-        <div className="hook-moment hook-moment-one relative mx-auto max-w-5xl">
-          <p className="hook-line text-[clamp(3.5rem,13vw,10rem)] font-black uppercase leading-[0.82] tracking-normal">
+        <div className="hook-moment hook-moment-one relative z-10 mx-auto max-w-5xl">
+          <p className="hook-line text-[clamp(3.5rem,13vw,10rem)] font-black uppercase leading-[0.82] tracking-normal drop-shadow-[0_4px_28px_rgba(0,0,0,0.85)]">
             This is a hook
           </p>
         </div>
