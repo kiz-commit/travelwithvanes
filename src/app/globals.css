@@ -136,3 +136,237 @@
     @apply font-sans scroll-smooth;
   }
 }
+
+@layer utilities {
+  .homepage-hook-stage {
+    animation: homepage-spiral-stage 8.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: 3s;
+    transform-origin: 50% 38%;
+    will-change: filter, opacity, transform;
+  }
+
+  .homepage-attention-hook {
+    animation: homepage-hook-overlay 8.8s ease both;
+    animation-delay: 3s;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .homepage-attention-ring {
+    animation: homepage-hook-ring 8.8s ease-in-out both;
+    animation-delay: 3s;
+    opacity: 0;
+  }
+
+  .homepage-attention-ring-two {
+    animation-delay: 3.12s;
+  }
+
+  .hook-moment {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+    will-change: opacity, transform;
+  }
+
+  .hook-moment-one {
+    animation: hook-moment-one 8.8s steps(1, end) both;
+    animation-delay: 3s;
+  }
+
+  .hook-moment-two {
+    animation: hook-moment-two 8.8s ease both;
+    animation-delay: 3s;
+  }
+
+  .hook-moment-three {
+    animation: hook-moment-three 8.8s ease both;
+    animation-delay: 3s;
+  }
+
+  .hook-line {
+    opacity: 1;
+    transform: none;
+    will-change: opacity, transform;
+  }
+
+  .hook-line-small {
+    animation: homepage-book-pulse 0.72s ease-in-out 10.45s 2;
+  }
+
+  @keyframes homepage-spiral-stage {
+    0%,
+    10%,
+    28%,
+    42%,
+    60%,
+    74%,
+    100% {
+      filter: none;
+      opacity: 1;
+      transform: scale(1) rotate(0);
+    }
+    13.2%,
+    20%,
+    47%,
+    58%,
+    79%,
+    94% {
+      filter: blur(8px);
+      opacity: 0.12;
+      transform: scale(0.1) rotate(-30deg);
+    }
+    24%,
+    62%,
+    96% {
+      filter: none;
+      opacity: 1;
+      transform: scale(1.025) rotate(1deg);
+    }
+  }
+
+  @keyframes homepage-hook-overlay {
+    0% {
+      opacity: 0;
+      visibility: visible;
+    }
+    11.79% {
+      opacity: 0;
+      visibility: visible;
+    }
+    11.8%,
+    27%,
+    44%,
+    58%,
+    77%,
+    96% {
+      opacity: 1;
+      visibility: visible;
+    }
+    32%,
+    41%,
+    63%,
+    73%,
+    99% {
+      opacity: 0;
+      visibility: visible;
+    }
+    100% {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  @keyframes hook-moment-one {
+    0% {
+      opacity: 0;
+      transform: scale(1) translateY(0);
+    }
+    12.69% {
+      opacity: 0;
+      transform: scale(1) translateY(0);
+    }
+    12.7%,
+    27% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    30%,
+    100% {
+      opacity: 0;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes hook-moment-two {
+    0%,
+    45% {
+      opacity: 0;
+      transform: scale(0.86) translateY(24px);
+    }
+    48%,
+    58% {
+      opacity: 1;
+      transform: scale(1.04) translateY(0);
+    }
+    61%,
+    100% {
+      opacity: 0;
+      transform: scale(1.12) translateY(-14px);
+    }
+  }
+
+  @keyframes hook-moment-three {
+    0%,
+    78% {
+      opacity: 0;
+      transform: scale(0.86) translateY(24px);
+    }
+    81%,
+    96% {
+      opacity: 1;
+      transform: scale(1.04) translateY(0);
+    }
+    99%,
+    100% {
+      opacity: 0;
+      transform: scale(1.12) translateY(-14px);
+    }
+  }
+
+  @keyframes homepage-book-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.08);
+    }
+  }
+
+  @keyframes homepage-hook-ring {
+    0%,
+    11%,
+    28%,
+    43%,
+    60%,
+    75%,
+    100% {
+      opacity: 0;
+      transform: scale(0.4) rotate(0);
+    }
+    15%,
+    48%,
+    81% {
+      opacity: 1;
+    }
+    23%,
+    62%,
+    98% {
+      opacity: 0;
+      transform: scale(1.45) rotate(34deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .homepage-hook-stage,
+    .homepage-attention-hook,
+    .homepage-attention-ring,
+    .hook-line {
+      animation: none;
+    }
+
+    .homepage-hook-stage {
+      filter: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    .homepage-attention-hook {
+      display: none;
+    }
+  }
+}
