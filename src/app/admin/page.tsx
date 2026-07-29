@@ -62,7 +62,7 @@ export default function AdminDashboardPage() {
               <span className="text-sm font-medium">Homepage</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Hero image or video, headlines, and section copy for the public home page.
+              Hero phone mockup media and portfolio tiles for the public home page.
             </p>
             <Button variant="outline" size="sm" render={<Link href="/admin/homepage" />}>
               Edit homepage

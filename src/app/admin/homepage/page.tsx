@@ -7,6 +7,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import Link from "next/link";
 import { getHomePageSettings, setHomePageSettings } from "@/lib/firestore";
 import { DEFAULT_HOME_PAGE_SETTINGS, mergeWithHomePageDefaults } from "@/lib/homepage-defaults";
 import { MediaUploadField } from "@/components/admin/media-upload-field";
@@ -35,7 +36,6 @@ export default function AdminHomePagePage() {
       setForm(mergeWithHomePageDefaults(raw));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
-      // Match public home: show editable defaults on failure (e.g. missing Firestore read rule).
       setForm(mergeWithHomePageDefaults(null));
     } finally {
       setLoading(false);
@@ -82,8 +82,13 @@ export default function AdminHomePagePage() {
       <div>
         <h1 className="font-heading text-2xl font-semibold">Homepage</h1>
         <p className="text-sm text-muted-foreground">
-          Hero media and copy, sections, and cards shown on the public home page. Values merge with
-          site defaults if a field was never saved.
+          Manage the hero phone mockup and portfolio tiles on the public home page. Headlines,
+          services, and other section copy are fixed in the current design. For the full UGC
+          portfolio page, use{" "}
+          <Link href="/admin/ugc" className="font-medium text-foreground underline underline-offset-4">
+            UGC posts
+          </Link>
+          .
         </p>
       </div>
 
@@ -94,7 +99,13 @@ export default function AdminHomePagePage() {
       )}
 
       <section className="space-y-4">
-        <h2 className="font-heading text-lg font-medium">Hero</h2>
+        <div>
+          <h2 className="font-heading text-lg font-medium">Hero phone mockup</h2>
+          <p className="text-sm text-muted-foreground">
+            Shown in the large phone frame on the home page. Gradient mode uses the built-in
+            placeholder when no media is set.
+          </p>
+        </div>
         <div className="grid gap-2">
           <Label>Background</Label>
           <select
@@ -114,7 +125,7 @@ export default function AdminHomePagePage() {
               )
             }
           >
-            <option value="gradient">Gradient only (no file)</option>
+            <option value="gradient">Gradient placeholder (no file)</option>
             <option value="image">Image</option>
             <option value="video">Video (muted loop)</option>
           </select>
@@ -136,460 +147,11 @@ export default function AdminHomePagePage() {
             showImagePreview={form.hero.mode === "image"}
           />
         )}
-        <div className="grid gap-2">
-          <Label>Eyebrow</Label>
-          <Input
-            value={form.hero.eyebrow}
-            onChange={(e) =>
-              setForm((f) =>
-                f
-                  ? { ...f, hero: { ...f.hero, eyebrow: e.target.value } }
-                  : f
-              )
-            }
-          />
-        </div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="grid gap-1">
-            <Label>Title line 1</Label>
-            <Input
-              value={form.hero.titleLine1}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? { ...f, hero: { ...f.hero, titleLine1: e.target.value } }
-                    : f
-                )
-              }
-            />
-          </div>
-          <div className="grid gap-1">
-            <Label>Italic word</Label>
-            <Input
-              value={form.hero.titleItalic}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? { ...f, hero: { ...f.hero, titleItalic: e.target.value } }
-                    : f
-                )
-              }
-            />
-          </div>
-        </div>
-        <div className="grid gap-2">
-          <Label>Title after line break</Label>
-          <Input
-            value={form.hero.titleLine2}
-            onChange={(e) =>
-              setForm((f) =>
-                f
-                  ? { ...f, hero: { ...f.hero, titleLine2: e.target.value } }
-                  : f
-              )
-            }
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label>Subtitle</Label>
-          <Input
-            value={form.hero.subtitle}
-            onChange={(e) =>
-              setForm((f) =>
-                f
-                  ? { ...f, hero: { ...f.hero, subtitle: e.target.value } }
-                  : f
-              )
-            }
-          />
-        </div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="grid gap-1">
-            <Label>Primary CTA label</Label>
-            <Input
-              value={form.hero.primaryCtaLabel}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? {
-                        ...f,
-                        hero: { ...f.hero, primaryCtaLabel: e.target.value },
-                      }
-                    : f
-                )
-              }
-            />
-          </div>
-          <div className="grid gap-1">
-            <Label>Primary CTA link</Label>
-            <Input
-              value={form.hero.primaryCtaHref}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? {
-                        ...f,
-                        hero: { ...f.hero, primaryCtaHref: e.target.value },
-                      }
-                    : f
-                )
-              }
-            />
-          </div>
-          <div className="grid gap-1">
-            <Label>Secondary CTA label</Label>
-            <Input
-              value={form.hero.secondaryCtaLabel}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? {
-                        ...f,
-                        hero: { ...f.hero, secondaryCtaLabel: e.target.value },
-                      }
-                    : f
-                )
-              }
-            />
-          </div>
-          <div className="grid gap-1">
-            <Label>Secondary CTA link</Label>
-            <Input
-              value={form.hero.secondaryCtaHref}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? {
-                        ...f,
-                        hero: { ...f.hero, secondaryCtaHref: e.target.value },
-                      }
-                    : f
-                )
-              }
-            />
-          </div>
-        </div>
       </section>
 
       <Separator />
 
-      <section className="space-y-4">
-        <h2 className="font-heading text-lg font-medium">Where we go</h2>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="grid gap-1">
-            <Label>Section label</Label>
-            <Input
-              value={form.whereWeGo.label}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? { ...f, whereWeGo: { ...f.whereWeGo, label: e.target.value } }
-                    : f
-                )
-              }
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {(["titleLine1", "titleItalic", "titleLine2"] as const).map((k) => (
-            <div className="grid gap-1" key={k}>
-              <Label>{k}</Label>
-              <Input
-                value={form.whereWeGo[k]}
-                onChange={(e) =>
-                  setForm((f) =>
-                    f
-                      ? {
-                          ...f,
-                          whereWeGo: { ...f.whereWeGo, [k]: e.target.value },
-                        }
-                      : f
-                  )
-                }
-              />
-            </div>
-          ))}
-        </div>
-        <h3 className="text-sm font-medium">Brazil card</h3>
-        {(["region", "title", "blurb", "href"] as const).map((k) => (
-          <div className="grid gap-1" key={`br-${k}`}>
-            <Label className="capitalize">{k}</Label>
-            <Input
-              value={form.whereWeGo.brazil[k]}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? {
-                        ...f,
-                        whereWeGo: {
-                          ...f.whereWeGo,
-                          brazil: { ...f.whereWeGo.brazil, [k]: e.target.value },
-                        },
-                      }
-                    : f
-                )
-              }
-            />
-          </div>
-        ))}
-        <h3 className="text-sm font-medium">Australia card</h3>
-        {(["region", "title", "blurb", "href"] as const).map((k) => (
-          <div className="grid gap-1" key={`au-${k}`}>
-            <Label className="capitalize">{k}</Label>
-            <Input
-              value={form.whereWeGo.australia[k]}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? {
-                        ...f,
-                        whereWeGo: {
-                          ...f.whereWeGo,
-                          australia: {
-                            ...f.whereWeGo.australia,
-                            [k]: e.target.value,
-                          },
-                        },
-                      }
-                    : f
-                )
-              }
-            />
-          </div>
-        ))}
-      </section>
-
-      <Separator />
-
-      <CardSection
-        title="Featured trip guides"
-        form={form}
-        setForm={setForm}
-        section="featured"
-        itemLabel="Guide"
-        defaultItem={DEFAULT_HOME_PAGE_SETTINGS.featured.items[0]!}
-      />
-
-      <Separator />
-
-      <CardSection
-        title="UGC column cards"
-        form={form}
-        setForm={setForm}
-        section="ugc"
-        itemLabel="Card"
-        defaultItem={DEFAULT_HOME_PAGE_SETTINGS.ugc.items[0]!}
-      />
-
-      <Separator />
-
-      <section className="space-y-4">
-        <h2 className="font-heading text-lg font-medium">Partnerships</h2>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="grid gap-1">
-            <Label>Section label</Label>
-            <Input
-              value={form.partnerships.label}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? { ...f, partnerships: { ...f.partnerships, label: e.target.value } }
-                    : f
-                )
-              }
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {(["titleLine1", "titleItalic", "workWithLabel"] as const).map((k) => (
-            <div className="grid gap-1" key={k}>
-              <Label>{k}</Label>
-              <Input
-                value={form.partnerships[k as keyof typeof form.partnerships] as string}
-                onChange={(e) =>
-                  setForm((f) =>
-                    f
-                      ? {
-                          ...f,
-                          partnerships: {
-                            ...f.partnerships,
-                            [k]: e.target.value,
-                          },
-                        }
-                      : f
-                  )
-                }
-              />
-            </div>
-          ))}
-        </div>
-        <div className="grid gap-1">
-          <Label>Work with link</Label>
-          <Input
-            value={form.partnerships.workWithHref}
-            onChange={(e) =>
-              setForm((f) =>
-                f
-                  ? {
-                      ...f,
-                      partnerships: {
-                        ...f.partnerships,
-                        workWithHref: e.target.value,
-                      },
-                    }
-                  : f
-              )
-            }
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">Service tiles</h3>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() =>
-              setForm((f) =>
-                f
-                  ? {
-                      ...f,
-                      partnerships: {
-                        ...f.partnerships,
-                        services: [
-                          ...f.partnerships.services,
-                          {
-                            name: "New",
-                            description: "",
-                            gradient: "from-[#e8ddd0] to-[#d4c4b0]",
-                          },
-                        ],
-                      },
-                    }
-                  : f
-              )
-            }
-          >
-            <Plus className="size-3.5" />
-            Add
-          </Button>
-        </div>
-        {form.partnerships.services.map((s, i) => (
-          <div key={i} className="space-y-2 rounded-lg border p-3">
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() =>
-                  setForm((f) =>
-                    f
-                      ? {
-                          ...f,
-                          partnerships: {
-                            ...f.partnerships,
-                            services: f.partnerships.services.filter(
-                              (_, j) => j !== i
-                            ),
-                          },
-                        }
-                      : f
-                  )
-                }
-              >
-                <Trash2 className="size-3.5" />
-              </Button>
-            </div>
-            {(["name", "description", "gradient"] as const).map((k) => (
-              <div className="grid gap-1" key={k}>
-                <Label className="capitalize">{k}</Label>
-                <Input
-                  value={s[k]}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setForm((f) => {
-                      if (!f) return f;
-                      const next = [...f.partnerships.services];
-                      next[i] = { ...next[i]!, [k]: v };
-                      return { ...f, partnerships: { ...f.partnerships, services: next } };
-                    });
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        ))}
-      </section>
-
-      <Separator />
-
-      <section className="space-y-4">
-        <h2 className="font-heading text-lg font-medium">Testimonial</h2>
-        <div className="grid gap-2">
-          <Label>Quote</Label>
-          <Input
-            value={form.testimonial.quote}
-            onChange={(e) =>
-              setForm((f) =>
-                f
-                  ? {
-                      ...f,
-                      testimonial: { ...f.testimonial, quote: e.target.value },
-                    }
-                  : f
-              )
-            }
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label>Attribution</Label>
-          <Input
-            value={form.testimonial.attribution}
-            onChange={(e) =>
-              setForm((f) =>
-                f
-                  ? {
-                      ...f,
-                      testimonial: {
-                        ...f.testimonial,
-                        attribution: e.target.value,
-                      },
-                    }
-                  : f
-              )
-            }
-          />
-        </div>
-      </section>
-
-      <Separator />
-
-      <section className="space-y-4">
-        <h2 className="font-heading text-lg font-medium">Bottom CTA</h2>
-        {(
-          [
-            "label",
-            "titleLine1",
-            "titleItalic",
-            "body",
-            "ctaLabel",
-            "ctaHref",
-          ] as const
-        ).map((k) => (
-          <div className="grid gap-1" key={k}>
-            <Label className="font-mono text-xs">{k}</Label>
-            <Input
-              value={form.finalCta[k]}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? { ...f, finalCta: { ...f.finalCta, [k]: e.target.value } }
-                    : f
-                )
-              }
-            />
-          </div>
-        ))}
-      </section>
+      <UgcPortfolioSection form={form} setForm={setForm} />
 
       <div className="flex flex-wrap gap-2 pb-12">
         <Button type="button" onClick={save} disabled={saving}>
@@ -604,85 +166,28 @@ export default function AdminHomePagePage() {
   );
 }
 
-type SectionKey = "featured" | "ugc";
-
-function CardSection({
-  title,
+function UgcPortfolioSection({
   form,
   setForm,
-  section,
-  itemLabel,
-  defaultItem,
 }: {
-  title: string;
   form: HomePageSettings;
   setForm: Dispatch<SetStateAction<HomePageSettings | null>>;
-  section: SectionKey;
-  itemLabel: string;
-  defaultItem:
-    | HomePageSettings["featured"]["items"][0]
-    | HomePageSettings["ugc"]["items"][0];
 }) {
-  const data = form[section];
+  const defaultItem = DEFAULT_HOME_PAGE_SETTINGS.ugc.items[0]!;
+
   return (
     <section className="space-y-4">
-      <h2 className="font-heading text-lg font-medium">{title}</h2>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <div className="grid gap-1">
-          <Label>Section label</Label>
-          <Input
-            value={data.label}
-            onChange={(e) =>
-              setForm((f) =>
-                f
-                  ? {
-                      ...f,
-                      [section]: { ...f[section], label: e.target.value },
-                    }
-                  : f
-              )
-            }
-          />
-        </div>
+      <div>
+        <h2 className="font-heading text-lg font-medium">Portfolio tiles</h2>
+        <p className="text-sm text-muted-foreground">
+          Cards with uploaded media appear in the &ldquo;Selected concepts&rdquo; masonry on the
+          home page. Each tile needs a photo or video; otherwise the site shows built-in sample
+          tiles instead.
+        </p>
       </div>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {(["titleLine1", "titleItalic", "viewAllLabel"] as const).map((k) => (
-          <div className="grid gap-1" key={k}>
-            <Label>{k}</Label>
-            <Input
-              value={data[k]}
-              onChange={(e) =>
-                setForm((f) =>
-                  f
-                    ? {
-                        ...f,
-                        [section]: { ...f[section], [k]: e.target.value },
-                      }
-                    : f
-                )
-              }
-            />
-          </div>
-        ))}
-      </div>
-      <div className="grid gap-1">
-        <Label>View all link</Label>
-        <Input
-          value={data.viewAllHref}
-          onChange={(e) =>
-            setForm((f) =>
-              f
-                ? {
-                    ...f,
-                    [section]: { ...f[section], viewAllHref: e.target.value },
-                  }
-                : f
-            )
-          }
-        />
-      </div>
+
       <div className="flex justify-between">
-        <h3 className="text-sm font-medium">Items</h3>
+        <h3 className="text-sm font-medium">Tiles</h3>
         <Button
           type="button"
           size="sm"
@@ -690,16 +195,17 @@ function CardSection({
           onClick={() =>
             setForm((f) => {
               if (!f) return f;
-              const items = [...f[section].items, { ...defaultItem }];
-              return { ...f, [section]: { ...f[section], items } };
+              const items = [...f.ugc.items, { ...defaultItem }];
+              return { ...f, ugc: { ...f.ugc, items } };
             })
           }
         >
           <Plus className="size-3.5" />
-          Add {itemLabel}
+          Add tile
         </Button>
       </div>
-      {data.items.map((item, i) => (
+
+      {form.ugc.items.map((item, i) => (
         <div key={i} className="space-y-2 rounded-lg border p-3">
           <div className="flex justify-end">
             <Button
@@ -709,87 +215,45 @@ function CardSection({
               onClick={() =>
                 setForm((f) => {
                   if (!f) return f;
-                  const items = f[section].items.filter((_, j) => j !== i);
-                  return { ...f, [section]: { ...f[section], items } };
+                  const items = f.ugc.items.filter((_, j) => j !== i);
+                  return { ...f, ugc: { ...f.ugc, items } };
                 })
               }
             >
               <Trash2 className="size-3.5" />
             </Button>
           </div>
-          {section === "featured" && (
-            (
-              [
-                "title",
-                "description",
-                "duration",
-                "price",
-                "gradient",
-                "location",
-                "href",
-              ] as const
-            ).map((k) => {
-              const it = item as HomePageSettings["featured"]["items"][0];
-              return (
-                <div className="grid gap-1" key={k}>
-                  <Label className="text-xs font-mono">{k}</Label>
-                  <Input
-                    value={it[k]}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setForm((f) => {
-                        if (!f) return f;
-                        const items = [...f.featured.items];
-                        items[i] = { ...items[i]!, [k]: v };
-                        return { ...f, featured: { ...f.featured, items } };
-                      });
-                    }}
-                  />
-                </div>
-              );
-            })
-          )}
-          {section === "ugc" && (
-            <>
-              {(["tag", "title", "gradient", "aspect", "href"] as const).map(
-                (k) => {
-                  const it = item as HomePageSettings["ugc"]["items"][0];
-                  return (
-                    <div className="grid gap-1" key={k}>
-                      <Label className="text-xs font-mono">{k}</Label>
-                      <Input
-                        value={it[k]}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setForm((f) => {
-                            if (!f) return f;
-                            const items = [...f.ugc.items];
-                            items[i] = { ...items[i]!, [k]: v };
-                            return { ...f, ugc: { ...f.ugc, items } };
-                          });
-                        }}
-                      />
-                    </div>
-                  );
-                }
-              )}
-              <MediaUploadField
-                label="Photo or video"
-                value={
-                  (item as HomePageSettings["ugc"]["items"][0]).mediaUrl ?? ""
-                }
-                onUrlChange={(url) =>
+          {(["tag", "title", "aspect", "href"] as const).map((k) => (
+            <div className="grid gap-1" key={k}>
+              <Label className="text-xs font-mono">{k}</Label>
+              <Input
+                value={item[k]}
+                onChange={(e) => {
+                  const v = e.target.value;
                   setForm((f) => {
                     if (!f) return f;
                     const items = [...f.ugc.items];
-                    items[i] = { ...items[i]!, mediaUrl: url };
+                    items[i] = { ...items[i]!, [k]: v };
                     return { ...f, ugc: { ...f.ugc, items } };
-                  })
-                }
-                inputProps={{ accept: "image/*,video/*" }}
+                  });
+                }}
               />
-            </>
-          )}
+            </div>
+          ))}
+          <MediaUploadField
+            label="Photo or video"
+            value={item.mediaUrl ?? ""}
+            onUrlChange={(url) =>
+              setForm((f) => {
+                if (!f) return f;
+                const items = [...f.ugc.items];
+                items[i] = { ...items[i]!, mediaUrl: url };
+                return { ...f, ugc: { ...f.ugc, items } };
+              })
+            }
+            inputProps={{ accept: "image/*,video/*" }}
+            helpText="Required for this tile to appear on the home page."
+          />
         </div>
       ))}
     </section>
