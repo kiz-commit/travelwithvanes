@@ -81,6 +81,7 @@ export function fileExtension(file: File): string {
   if (t === "image/gif") return "gif";
   if (t === "video/mp4") return "mp4";
   if (t === "video/webm") return "webm";
+  if (t === "video/quicktime" || t === "video/x-quicktime") return "mov";
   return "bin";
 }
 

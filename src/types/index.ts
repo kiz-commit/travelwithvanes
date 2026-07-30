@@ -97,110 +97,151 @@ export interface Order {
   createdAt: Date;
 }
 
-export type HeroMode = "gradient" | "image" | "video";
+export type HeroMode = "gradient" | "image" | "video" | "both";
+
+export type HomeServiceIcon = "clapperboard" | "camera" | "plane" | "sparkles";
 
 export interface HomePageHero {
   mode: HeroMode;
+  /** Image URL for image/both modes, or video URL for video mode. */
   mediaUrl: string;
-  eyebrow: string;
-  titleLine1: string;
-  titleItalic: string;
-  titleLine2: string;
-  subtitle: string;
+  /** Video URL when mode is "both" (play on click over the poster image). */
+  videoUrl: string;
+  title: string;
+  subtitleMobile: string;
+  subtitleDesktop: string;
   primaryCtaLabel: string;
   primaryCtaHref: string;
   secondaryCtaLabel: string;
   secondaryCtaHref: string;
+  profileName: string;
+  profileRole: string;
+  nicheTags: string[];
+  hookCardLabel: string;
+  hookCardText: string;
+  placeholderBadge: string;
+  placeholderBrand: string;
+  placeholderHeadline: string;
 }
 
-export interface HomeDestinationCard {
-  region: string;
-  title: string;
-  blurb: string;
-  href: string;
-}
-
-export interface HomeWhereWeGo {
+export interface HomeStat {
+  value: string;
   label: string;
-  titleLine1: string;
-  titleItalic: string;
-  titleLine2: string;
-  brazil: HomeDestinationCard;
-  australia: HomeDestinationCard;
 }
 
-export interface HomeFeaturedItinerary {
+export interface HomeFallbackTile {
+  tag: string;
   title: string;
-  description: string;
-  duration: string;
-  price: string;
-  gradient: string;
-  location: string;
-  href: string;
-}
-
-export interface HomeFeaturedBlock {
-  label: string;
-  titleLine1: string;
-  titleItalic: string;
-  viewAllLabel: string;
-  viewAllHref: string;
-  items: HomeFeaturedItinerary[];
+  metric: string;
+  /** Tailwind background class, e.g. bg-[#f97316] */
+  className: string;
+  /** Tailwind height class, e.g. h-80 */
+  height: string;
 }
 
 export interface HomeUgcCard {
   tag: string;
   title: string;
-  gradient: string;
   aspect: string;
   href: string;
   mediaUrl?: string;
+  gradient?: string;
 }
 
 export interface HomeUgcBlock {
   label: string;
-  titleLine1: string;
-  titleItalic: string;
+  title: string;
   viewAllLabel: string;
   viewAllHref: string;
   items: HomeUgcCard[];
+  fallbackTiles: HomeFallbackTile[];
 }
 
-export interface HomePartnershipService {
-  name: string;
-  description: string;
-  gradient: string;
+export interface HomeService {
+  icon: HomeServiceIcon;
+  title: string;
+  copy: string;
 }
 
-export interface HomePartnershipsBlock {
+export interface HomeServicesBlock {
   label: string;
-  titleLine1: string;
-  titleItalic: string;
-  workWithLabel: string;
-  workWithHref: string;
-  services: HomePartnershipService[];
+  title: string;
+  body: string;
+  items: HomeService[];
+}
+
+export interface HomeGuideLink {
+  label: string;
+  href: string;
+}
+
+export interface HomeTravelBlock {
+  label: string;
+  title: string;
+  body: string;
+  links: HomeGuideLink[];
 }
 
 export interface HomeTestimonial {
   quote: string;
-  attribution: string;
+  chips: string[];
 }
 
 export interface HomeFinalCta {
   label: string;
-  titleLine1: string;
-  titleItalic: string;
+  title: string;
   body: string;
   ctaLabel: string;
   ctaHref: string;
 }
 
+export interface HomeHookMoment {
+  line1: string;
+  line2: string;
+  line3: string;
+  backgroundVideoUrl: string;
+}
+
 export interface HomePageSettings {
   hero: HomePageHero;
-  whereWeGo: HomeWhereWeGo;
-  featured: HomeFeaturedBlock;
+  stats: HomeStat[];
   ugc: HomeUgcBlock;
-  partnerships: HomePartnershipsBlock;
+  services: HomeServicesBlock;
+  travel: HomeTravelBlock;
   testimonial: HomeTestimonial;
   finalCta: HomeFinalCta;
+  hookMoment: HomeHookMoment;
+}
+
+export interface AboutSocialLink {
+  label: string;
+  href: string;
+}
+
+export interface AboutPageSettings {
+  heroTitle: string;
+  name: string;
+  roles: string;
+  avatarUrl: string;
+  bio: string[];
+  socials: AboutSocialLink[];
+  stats: HomeStat[];
+  highlightsLabel: string;
+  highlightsTitle: string;
+  highlightsIntro: string;
+  highlights: string[];
+  highlightsOutro: string;
+  highlightsCtaLabel: string;
+  highlightsCtaHref: string;
+  ctaTitle: string;
+  ctaBody: string;
+  ctaLabel: string;
+  ctaHref: string;
+}
+
+export interface SiteSettings {
+  email: string;
+  footerTagline: string;
+  footerBlurb: string;
+  socials: AboutSocialLink[];
 }

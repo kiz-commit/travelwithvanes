@@ -42,7 +42,15 @@ export function acceptMatchesKind(
   if (!accept || accept === "*/*") return true;
   const parts = accept.split(",").map((p) => p.trim().toLowerCase());
   if (kind === "video") {
-    return parts.some((p) => p.startsWith("video/") || p === "video/*");
+    return parts.some(
+      (p) =>
+        p.startsWith("video/") ||
+        p === "video/*" ||
+        p === ".mov" ||
+        p === ".mp4" ||
+        p === ".webm" ||
+        p === ".m4v"
+    );
   }
   return parts.some((p) => p.startsWith("image/") || p === "image/*");
 }

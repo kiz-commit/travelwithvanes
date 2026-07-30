@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Home, MapPin, ShoppingBag, Video, FolderOpen } from "lucide-react";
+import {
+  Home,
+  MapPin,
+  ShoppingBag,
+  Video,
+  FolderOpen,
+  User,
+  Settings,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,10 +70,51 @@ export default function AdminDashboardPage() {
               <span className="text-sm font-medium">Homepage</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Hero phone mockup media and portfolio tiles for the public home page.
+              Hero, stats, portfolio, services, travel section, quote, CTA, and
+              attention hook.
             </p>
-            <Button variant="outline" size="sm" render={<Link href="/admin/homepage" />}>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href="/admin/homepage" />}
+            >
               Edit homepage
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <User className="size-4" />
+              <span className="text-sm font-medium">About</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Profile, bio, socials, stats, and highlights on the About page.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href="/admin/about" />}
+            >
+              Edit about
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Settings className="size-4" />
+              <span className="text-sm font-medium">Site / footer</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Contact email, footer copy, and social links.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href="/admin/site" />}
+            >
+              Edit site
             </Button>
           </CardContent>
         </Card>
@@ -76,9 +125,13 @@ export default function AdminDashboardPage() {
               <span className="text-sm font-medium">Media library</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Upload photos and videos once, then reuse them on the homepage, UGC, and elsewhere.
+              Upload photos and videos once, then reuse them anywhere.
             </p>
-            <Button variant="outline" size="sm" render={<Link href="/admin/media" />}>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href="/admin/media" />}
+            >
               Manage media
             </Button>
           </CardContent>

@@ -1,13 +1,29 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getSiteSettings } from "@/lib/firestore";
+import {
+  DEFAULT_SITE_SETTINGS,
+  mergeWithSiteDefaults,
+} from "@/lib/site-defaults";
+import type { SiteSettings } from "@/types";
 
 const navLinks = [
   { href: "/itineraries", label: "Trip Guides" },
-  { href: "/shop", label: "Shop" },
   { href: "/ugc", label: "UGC Portfolio" },
   { href: "/about", label: "About Me" },
 ];
 
 export function Footer() {
+  const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
+
+  useEffect(() => {
+    getSiteSettings()
+      .then((raw) => setSettings(mergeWithSiteDefaults(raw)))
+      .catch(() => setSettings(mergeWithSiteDefaults(null)));
+  }, []);
+
   return (
     <footer className="bg-[#071f3d] text-white/70">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -23,24 +39,25 @@ export function Footer() {
                   TravelwithVanes
                 </span>
                 <span className="text-[11px] font-medium tracking-wide text-white/45">
-                  Travel more. Drift better.
+                  {settings.footerTagline}
                 </span>
               </span>
             </div>
             <p className="mt-4 text-[15px] leading-relaxed">
-              Stylish travel guides, honest recommendations, and stories from
-              Brazil, Australia, and everywhere worth the extra stop.
+              {settings.footerBlurb}
             </p>
-            <div className="mt-6 flex items-center gap-5">
-              <a href="#" className="text-white/50 transition-colors hover:text-sky text-[13px] font-medium uppercase tracking-wider">
-                Instagram
-              </a>
-              <a href="#" className="text-white/50 transition-colors hover:text-sky text-[13px] font-medium uppercase tracking-wider">
-                YouTube
-              </a>
-              <a href="#" className="text-white/50 transition-colors hover:text-sky text-[13px] font-medium uppercase tracking-wider">
-                TikTok
-              </a>
+            <div className="mt-6 flex flex-wrap items-center gap-5">
+              {settings.socials.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  className="text-white/50 transition-colors hover:text-sky text-[13px] font-medium uppercase tracking-wider"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {social.label}
+                </a>
+              ))}
             </div>
           </div>
 
@@ -68,12 +85,18 @@ export function Footer() {
             </h3>
             <ul className="flex flex-col gap-3 text-[15px]">
               <li>
-                <a href="mailto:hello@travelwithvanes.com" className="transition-colors hover:text-white">
-                  hello@travelwithvanes.com
+                <a
+                  href={`mailto:${settings.email}`}
+                  className="transition-colors hover:text-white"
+                >
+                  {settings.email}
                 </a>
               </li>
               <li>
-                <Link href="/about" className="transition-colors hover:text-white">
+                <Link
+                  href="/about"
+                  className="transition-colors hover:text-white"
+                >
                   About Me
                 </Link>
               </li>

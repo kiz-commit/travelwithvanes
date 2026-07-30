@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Mail, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -12,12 +12,16 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { getSiteSettings } from "@/lib/firestore";
+import {
+  DEFAULT_SITE_SETTINGS,
+  mergeWithSiteDefaults,
+} from "@/lib/site-defaults";
 
 const links = [
   { href: "/", label: "Home" },
   { href: "/ugc", label: "UGC" },
   { href: "/itineraries", label: "Trip Guides" },
-  { href: "/shop", label: "Shop" },
   { href: "/about", label: "About Me" },
 ];
 
@@ -25,7 +29,14 @@ export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [email, setEmail] = useState(DEFAULT_SITE_SETTINGS.email);
   const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    getSiteSettings()
+      .then((raw) => setEmail(mergeWithSiteDefaults(raw).email))
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -35,6 +46,8 @@ export function Navbar() {
 
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
+
+  const mailto = `mailto:${email}`;
 
   useEffect(() => {
     function handleScroll() {
@@ -68,7 +81,7 @@ export function Navbar() {
               TravelwithVanes
             </span>
             <span className="hidden text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b7280] sm:block">
-              Travel UGC creator
+              Lifestyle UGC creator
             </span>
           </span>
         </Link>
@@ -98,10 +111,11 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Button
-            className="h-11 rounded-none bg-[#111827] px-5 text-[13px] font-bold tracking-wide text-white shadow-none transition hover:bg-[#f97316]"
-            render={<a href="mailto:hello@travelwithvanes.com" />}
+            variant="creator"
+            size="lg"
+            className="h-11 px-5 text-[13px]"
+            render={<a href={mailto} />}
           >
-            <Mail className="size-4" />
             Work With Me
           </Button>
         </div>
@@ -136,7 +150,7 @@ export function Navbar() {
                     TravelwithVanes
                   </span>
                   <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b7280]">
-                    Travel UGC creator
+                    Lifestyle UGC creator
                   </span>
                 </span>
               </div>
@@ -166,15 +180,13 @@ export function Navbar() {
             </ul>
             <div className="mt-8">
               <Button
-                className="h-12 w-full rounded-none bg-[#111827] px-6 text-[13px] font-bold tracking-wide text-white shadow-none transition hover:bg-[#f97316]"
+                variant="creator"
+                size="lg"
+                className="h-12 w-full px-6 text-[13px]"
                 render={
-                  <a
-                    href="mailto:hello@travelwithvanes.com"
-                    onClick={() => setOpen(false)}
-                  />
+                  <a href={mailto} onClick={() => setOpen(false)} />
                 }
               >
-                <Mail className="size-4" />
                 Work With Me
               </Button>
             </div>

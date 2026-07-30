@@ -9,6 +9,8 @@ import { hasDisplayableMedia, isVideoUrl } from "@/lib/media-utils";
 
 export type VideoTileProps = {
   url: string;
+  /** Optional still image shown before play (e.g. hero phone poster). */
+  posterUrl?: string;
   title?: string;
   tag?: string;
   subtitle?: string;
@@ -20,6 +22,7 @@ export type VideoTileProps = {
 
 export function VideoTile({
   url,
+  posterUrl,
   title,
   tag,
   subtitle,
@@ -30,7 +33,7 @@ export function VideoTile({
 }: VideoTileProps) {
   const [active, setActive] = useState(false);
 
-  if (!hasDisplayableMedia(url)) {
+  if (!hasDisplayableMedia(url) && !hasDisplayableMedia(posterUrl)) {
     return (
       <div
         className={cn(
@@ -45,8 +48,10 @@ export function VideoTile({
 
   const isEmbed = isEmbeddableUrl(url);
   const isVideo = isVideoUrl(url) || isEmbed;
+  const previewUrl =
+    posterUrl && hasDisplayableMedia(posterUrl) ? posterUrl : url;
 
-  if (active) {
+  if (active && hasDisplayableMedia(url)) {
     return (
       <div
         className={cn(
@@ -76,7 +81,7 @@ export function VideoTile({
       )}
     >
       <MediaDisplay
-        url={url}
+        url={previewUrl}
         alt={title}
         className="absolute inset-0"
         muted

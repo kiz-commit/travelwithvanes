@@ -185,6 +185,13 @@
     z-index: 0;
   }
 
+  .hook-moment-bg-image {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
   .hook-moment-two {
     animation: hook-moment-two 8.8s ease both;
     animation-delay: 3s;

@@ -270,7 +270,7 @@ export default function UGCFeedPage() {
         </div>
       </section>
 
-      <section className="bg-[#f6fbfe] px-5 py-20">
+      <section id="pricing" className="scroll-mt-24 bg-[#f6fbfe] px-5 py-20">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#0f766e]">

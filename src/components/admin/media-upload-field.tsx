@@ -2,6 +2,7 @@
 
 import { useId, useState, type InputHTMLAttributes } from "react";
 import { uploadMediaAsset } from "@/lib/media-library";
+import { prepareVideoForUpload, isMovFile } from "@/lib/convert-video";
 import { isImageUrl, isVideoUrl } from "@/lib/media-utils";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,11 @@ export type MediaUploadFieldProps = {
   >;
   /** Show a small preview when value is an image or video URL. */
   showImagePreview?: boolean;
+  /**
+   * When true, .mov / QuickTime uploads are converted to WebM in the browser
+   * before upload (falls back to original if conversion fails).
+   */
+  convertMov?: boolean;
 };
 
 export function MediaUploadField({
@@ -34,11 +40,13 @@ export function MediaUploadField({
   maxBytes,
   inputProps,
   showImagePreview = true,
+  convertMov = false,
 }: MediaUploadFieldProps) {
   const autoId = useId();
   const id = propId ?? autoId;
   const fileInputId = `${id}-file`;
   const [uploading, setUploading] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,12 +55,31 @@ export function MediaUploadField({
     e.target.value = "";
     if (!file) return;
     setError(null);
+    setStatus(null);
     setUploading(true);
     try {
-      const asset = await uploadMediaAsset(file, { maxBytes });
+      let toUpload = file;
+      if (convertMov && isMovFile(file)) {
+        setStatus("Converting .mov…");
+        const prepared = await prepareVideoForUpload(file);
+        toUpload = prepared.file;
+        if (prepared.converted) {
+          setStatus("Converted — uploading…");
+        } else if (prepared.warning) {
+          setError(prepared.warning);
+          setStatus("Uploading original…");
+        } else {
+          setStatus("Uploading…");
+        }
+      } else {
+        setStatus("Uploading…");
+      }
+      const asset = await uploadMediaAsset(toUpload, { maxBytes });
       onUrlChange(asset.url);
+      setStatus(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
+      setStatus(null);
     } finally {
       setUploading(false);
     }
@@ -83,7 +110,7 @@ export function MediaUploadField({
             ) : (
               <Upload className="size-4" />
             )}
-            {uploading ? "Uploading…" : "Upload"}
+            {uploading ? status || "Uploading…" : "Upload"}
           </Button>
           <Button
             type="button"

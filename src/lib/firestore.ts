@@ -12,7 +12,15 @@ import {
   Timestamp,
   setDoc,
 } from "firebase/firestore";
-import { Itinerary, Product, UGCPost, type HomePageSettings, type MediaAsset } from "@/types";
+import {
+  Itinerary,
+  Product,
+  UGCPost,
+  type AboutPageSettings,
+  type HomePageSettings,
+  type MediaAsset,
+  type SiteSettings,
+} from "@/types";
 import { normalizeItinerary } from "@/lib/itinerary-migrate";
 
 function convertTimestamps<T>(
@@ -237,10 +245,12 @@ export function newEntityId(
   return doc(collection(db, name)).id;
 }
 
-// --------------- Site settings (homepage) ---------------
+// --------------- Site settings (homepage / about / site) ---------------
 
 const siteSettingsRef = collection(db, "site_settings");
 const homePageDoc = doc(siteSettingsRef, "homepage");
+const aboutPageDoc = doc(siteSettingsRef, "about");
+const siteDoc = doc(siteSettingsRef, "site");
 
 export async function getHomePageSettings(): Promise<HomePageSettings | null> {
   const d = await getDoc(homePageDoc);
@@ -249,9 +259,31 @@ export async function getHomePageSettings(): Promise<HomePageSettings | null> {
 }
 
 export async function setHomePageSettings(
-  partial: Partial<HomePageSettings>
+  data: HomePageSettings
 ): Promise<void> {
-  await setDoc(homePageDoc, partial, { merge: true });
+  await setDoc(homePageDoc, data);
+}
+
+export async function getAboutPageSettings(): Promise<AboutPageSettings | null> {
+  const d = await getDoc(aboutPageDoc);
+  if (!d.exists()) return null;
+  return d.data() as AboutPageSettings;
+}
+
+export async function setAboutPageSettings(
+  data: AboutPageSettings
+): Promise<void> {
+  await setDoc(aboutPageDoc, data);
+}
+
+export async function getSiteSettings(): Promise<SiteSettings | null> {
+  const d = await getDoc(siteDoc);
+  if (!d.exists()) return null;
+  return d.data() as SiteSettings;
+}
+
+export async function setSiteSettings(data: SiteSettings): Promise<void> {
+  await setDoc(siteDoc, data);
 }
 
 // --------------- Media library ---------------

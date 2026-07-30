@@ -12,6 +12,8 @@ const navLinks = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/media", label: "Media" },
   { href: "/admin/homepage", label: "Homepage" },
+  { href: "/admin/about", label: "About" },
+  { href: "/admin/site", label: "Site" },
   { href: "/admin/itineraries", label: "Trip Guides" },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/ugc", label: "UGC" },
@@ -60,7 +62,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             Admin Dashboard
           </span>
 
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             {navLinks.map(({ href, label }) => (
               <Button
                 key={href}
