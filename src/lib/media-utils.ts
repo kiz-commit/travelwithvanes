@@ -2,6 +2,18 @@ import type { MediaAssetKind } from "@/types";
 
 import { getEmbedInfo } from "@/lib/embed-utils";
 
+const VIDEO_EXTENSION =
+  /\.(mp4|webm|mov|m4v|mts|m2ts|avi|mkv|3gp|ogv)$/i;
+
+export function isVideoFile(file: File): boolean {
+  if (file.type.startsWith("video/")) return true;
+  return VIDEO_EXTENSION.test(file.name);
+}
+
+export function mediaKindFromFile(file: File): MediaAssetKind {
+  return isVideoFile(file) ? "video" : "image";
+}
+
 export function mediaKindFromMime(mimeType: string): MediaAssetKind {
   return mimeType.startsWith("video/") ? "video" : "image";
 }

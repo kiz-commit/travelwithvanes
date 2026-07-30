@@ -6,14 +6,13 @@ import {
 } from "firebase/storage";
 import type { FirebaseStorage } from "firebase/storage";
 import { storage } from "./firebase";
+import { isVideoFile } from "./media-utils";
 
 export const IMAGE_MAX_BYTES = 50 * 1024 * 1024; // 50 MB
 export const VIDEO_MAX_BYTES = 100 * 1024 * 1024; // 100 MB
 
 export function maxBytesForFile(file: File): number {
-  if (file.type.startsWith("video/")) return VIDEO_MAX_BYTES;
-  if (/\.(mp4|webm|mov|m4v)$/i.test(file.name)) return VIDEO_MAX_BYTES;
-  return IMAGE_MAX_BYTES;
+  return isVideoFile(file) ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
 }
 
 function ourBucket(): string | null {

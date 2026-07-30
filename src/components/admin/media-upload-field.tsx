@@ -3,12 +3,28 @@
 import { useId, useState, type InputHTMLAttributes } from "react";
 import { uploadMediaAsset } from "@/lib/media-library";
 import { prepareVideoForUpload, isMovFile } from "@/lib/convert-video";
-import { isImageUrl, isVideoUrl } from "@/lib/media-utils";
+import {
+  acceptMatchesKind,
+  isImageUrl,
+  isVideoUrl,
+} from "@/lib/media-utils";
+import { IMAGE_MAX_BYTES, VIDEO_MAX_BYTES } from "@/lib/storage-upload";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MediaPickerDialog } from "@/components/admin/media-picker-dialog";
 import { Upload, Loader2, ImageIcon, Play, FolderOpen } from "lucide-react";
+
+function maxBytesForAccept(
+  accept?: string,
+  override?: number
+): number | undefined {
+  if (override !== undefined) return override;
+  if (!accept) return undefined;
+  if (acceptMatchesKind(accept, "video")) return VIDEO_MAX_BYTES;
+  if (acceptMatchesKind(accept, "image")) return IMAGE_MAX_BYTES;
+  return undefined;
+}
 
 export type MediaUploadFieldProps = {
   id?: string;
@@ -74,7 +90,9 @@ export function MediaUploadField({
       } else {
         setStatus("Uploading…");
       }
-      const asset = await uploadMediaAsset(toUpload, { maxBytes });
+      const asset = await uploadMediaAsset(toUpload, {
+        maxBytes: maxBytesForAccept(inputProps?.accept, maxBytes),
+      });
       onUrlChange(asset.url);
       setStatus(null);
     } catch (err) {
@@ -180,7 +198,7 @@ export function MediaUploadField({
         onOpenChange={setPickerOpen}
         onSelect={onUrlChange}
         accept={inputProps?.accept}
-        maxBytes={maxBytes}
+        maxBytes={maxBytesForAccept(inputProps?.accept, maxBytes)}
       />
     </div>
   );
