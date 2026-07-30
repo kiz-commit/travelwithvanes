@@ -15,6 +15,8 @@ export type MediaDisplayProps = {
   controls?: boolean;
   playsInline?: boolean;
   objectFit?: "cover" | "contain";
+  /** Above-the-fold hero media: eager load + high fetch priority */
+  priority?: boolean;
 };
 
 export function MediaDisplay({
@@ -27,6 +29,7 @@ export function MediaDisplay({
   controls = false,
   playsInline = true,
   objectFit = "cover",
+  priority = false,
 }: MediaDisplayProps) {
   if (!url) return null;
 
@@ -57,7 +60,7 @@ export function MediaDisplay({
         autoPlay={autoPlay}
         controls={controls}
         playsInline={playsInline}
-        preload={autoPlay ? "auto" : "metadata"}
+        preload={autoPlay || priority ? "auto" : "metadata"}
       />
     );
   }
@@ -68,6 +71,9 @@ export function MediaDisplay({
       <img
         src={url}
         alt={alt}
+        loading={priority ? "eager" : undefined}
+        fetchPriority={priority ? "high" : undefined}
+        decoding={priority ? "sync" : undefined}
         className={cn(
           "h-full w-full",
           objectFit === "cover" ? "object-cover" : "object-contain",

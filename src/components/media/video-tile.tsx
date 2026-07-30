@@ -18,6 +18,7 @@ export type VideoTileProps = {
   aspectClassName?: string;
   fallbackClassName?: string;
   showOverlayText?: boolean;
+  priority?: boolean;
 };
 
 export function VideoTile({
@@ -30,6 +31,7 @@ export function VideoTile({
   aspectClassName = "aspect-[9/16]",
   fallbackClassName = "bg-[#111827]",
   showOverlayText = true,
+  priority = false,
 }: VideoTileProps) {
   const [active, setActive] = useState(false);
 
@@ -67,6 +69,7 @@ export function VideoTile({
           controls
           autoPlay
           muted={false}
+          priority={priority}
         />
       </div>
     );
@@ -86,6 +89,7 @@ export function VideoTile({
         className="absolute inset-0"
         muted
         playsInline
+        priority={priority}
       />
 
       {isVideo && (
