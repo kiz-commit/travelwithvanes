@@ -29,7 +29,7 @@ export function VideoTile({
   subtitle,
   className,
   aspectClassName = "aspect-[9/16]",
-  fallbackClassName = "bg-[#111827]",
+  fallbackClassName = "bg-espresso",
   showOverlayText = true,
   priority = false,
 }: VideoTileProps) {

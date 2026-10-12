@@ -15,12 +15,16 @@ import {
 import {
   Itinerary,
   Product,
+  BlogPost,
   UGCPost,
   type AboutPageSettings,
   type HomePageSettings,
   type MediaAsset,
   type SiteSettings,
+  type TripEnquiry,
+  type TripEnquiryStatus,
 } from "@/types";
+import type { TripPackage, TripPackageRecord } from "@/lib/trip-packages";
 import { normalizeItinerary } from "@/lib/itinerary-migrate";
 
 function convertTimestamps<T>(
@@ -176,6 +180,83 @@ export async function deleteProduct(id: string): Promise<void> {
   await deleteDoc(doc(db, "products", id));
 }
 
+// --------------- Blog posts ---------------
+
+const blogPostsRef = collection(db, "blog_posts");
+
+function byPublishedAtDesc(a: BlogPost, b: BlogPost): number {
+  return (b.publishedAt || "").localeCompare(a.publishedAt || "");
+}
+
+export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
+  const q = query(blogPostsRef, where("published", "==", true));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => convertTimestamps<BlogPost>({ id: d.id, ...d.data() }))
+    .sort(byPublishedAtDesc);
+}
+
+export async function getAllBlogPosts(): Promise<BlogPost[]> {
+  const snap = await getDocs(blogPostsRef);
+  return snap.docs
+    .map((d) => convertTimestamps<BlogPost>({ id: d.id, ...d.data() }))
+    .sort(byPublishedAtDesc);
+}
+
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  const q = query(
+    blogPostsRef,
+    where("slug", "==", slug),
+    where("published", "==", true)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return convertTimestamps<BlogPost>({ id: d.id, ...d.data() });
+}
+
+export async function createBlogPost(
+  data: Omit<BlogPost, "id" | "createdAt">,
+  newId: string
+): Promise<string> {
+  await setDoc(doc(db, "blog_posts", newId), {
+    ...data,
+    createdAt: Timestamp.now(),
+  });
+  return newId;
+}
+
+export async function updateBlogPost(id: string, data: Partial<BlogPost>): Promise<void> {
+  await updateDoc(doc(db, "blog_posts", id), data);
+}
+
+export async function deleteBlogPost(id: string): Promise<void> {
+  await deleteDoc(doc(db, "blog_posts", id));
+}
+
+export async function subscribeToNewsletter(
+  email: string,
+  locale: "en" | "pt"
+): Promise<void> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const bytes = new TextEncoder().encode(normalizedEmail);
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+  const subscriberId = Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+
+  await setDoc(
+    doc(db, "newsletter_subscribers", subscriberId),
+    {
+      email: normalizedEmail,
+      locale,
+      source: "blog",
+      subscribedAt: Timestamp.now(),
+    },
+    { merge: true }
+  );
+}
+
 // --------------- UGC Posts ---------------
 
 const ugcPostsRef = collection(db, "ugc_posts");
@@ -234,14 +315,16 @@ export async function deleteUGCPost(id: string): Promise<void> {
 // --------------- New entity ids (setDoc) ---------------
 
 export function newEntityId(
-  which: "itineraries" | "products" | "ugc_posts"
+  which: "itineraries" | "products" | "ugc_posts" | "blog_posts"
 ): string {
   const name =
     which === "itineraries"
       ? "itineraries"
       : which === "products"
         ? "products"
-        : "ugc_posts";
+        : which === "blog_posts"
+          ? "blog_posts"
+          : "ugc_posts";
   return doc(collection(db, name)).id;
 }
 
@@ -315,4 +398,81 @@ export async function createMediaAsset(
 
 export async function deleteMediaAsset(id: string): Promise<void> {
   await deleteDoc(doc(mediaAssetsRef, id));
+}
+
+// --------------- Signature trips (packages) ---------------
+
+const tripPackagesRef = collection(db, "trip_packages");
+
+function bySortOrder(a: TripPackageRecord, b: TripPackageRecord): number {
+  return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+}
+
+export async function getAllTripPackages(): Promise<TripPackageRecord[]> {
+  const snap = await getDocs(tripPackagesRef);
+  return snap.docs
+    .map((d) => convertTimestamps<TripPackageRecord>({ id: d.id, ...d.data() }))
+    .map((trip) => ({
+      ...trip,
+      route: Array.isArray(trip.route) ? trip.route : [],
+      highlights: Array.isArray(trip.highlights) ? trip.highlights : [],
+      outline: Array.isArray(trip.outline) ? trip.outline : [],
+    }))
+    .sort(bySortOrder);
+}
+
+export async function createTripPackage(
+  data: TripPackage & { published: boolean; sortOrder: number },
+  id?: string
+): Promise<string> {
+  const ref = id ? doc(tripPackagesRef, id) : doc(tripPackagesRef);
+  await setDoc(ref, { ...data, createdAt: Timestamp.now() });
+  return ref.id;
+}
+
+export async function updateTripPackage(
+  id: string,
+  data: Partial<TripPackageRecord>
+): Promise<void> {
+  const rest = { ...data };
+  delete rest.id;
+  delete rest.createdAt;
+  await updateDoc(doc(tripPackagesRef, id), rest);
+}
+
+export async function deleteTripPackage(id: string): Promise<void> {
+  await deleteDoc(doc(tripPackagesRef, id));
+}
+
+// --------------- Trip enquiries (leads from /plan) ---------------
+
+const tripEnquiriesRef = collection(db, "trip_enquiries");
+
+export type NewTripEnquiry = Omit<TripEnquiry, "id" | "createdAt" | "status">;
+
+export async function submitTripEnquiry(data: NewTripEnquiry): Promise<void> {
+  await setDoc(doc(tripEnquiriesRef), {
+    ...data,
+    status: "new",
+    createdAt: Timestamp.now(),
+  });
+}
+
+export async function getAllTripEnquiries(): Promise<TripEnquiry[]> {
+  const q = query(tripEnquiriesRef, orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) =>
+    convertTimestamps<TripEnquiry>({ id: d.id, ...d.data() })
+  );
+}
+
+export async function updateTripEnquiryStatus(
+  id: string,
+  status: TripEnquiryStatus
+): Promise<void> {
+  await updateDoc(doc(tripEnquiriesRef, id), { status });
+}
+
+export async function deleteTripEnquiry(id: string): Promise<void> {
+  await deleteDoc(doc(tripEnquiriesRef, id));
 }

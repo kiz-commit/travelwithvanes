@@ -2,42 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapPin, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { MapPin } from "lucide-react";
+import { GuideExplorer } from "@/components/itineraries/guide-explorer";
 import { getPublishedItineraries } from "@/lib/firestore";
-import { plainTextFromHtml } from "@/lib/rich-text";
 import type { Itinerary } from "@/types";
-
-const gradients = [
-  "from-brazil-blue to-sky",
-  "from-ochre to-brazil-blue",
-  "from-sky to-brazil-green",
-  "from-sky to-brazil-blue",
-  "from-brazil-blue to-brazil-green",
-  "from-ochre to-sky",
-];
 
 function LoadingSkeleton() {
   return (
-    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          className="animate-pulse overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10"
-        >
-          <div className="h-48 bg-muted" />
-          <div className="flex flex-col gap-3 p-4">
-            <div className="h-5 w-3/4 rounded bg-muted" />
-            <div className="h-4 w-full rounded bg-muted" />
-            <div className="h-4 w-2/3 rounded bg-muted" />
-            <div className="flex gap-2">
-              <div className="h-5 w-16 rounded-full bg-muted" />
-              <div className="h-5 w-20 rounded-full bg-muted" />
-            </div>
-            <div className="h-8 w-full rounded bg-muted" />
-          </div>
+    <div className="grid animate-pulse gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading guides">
+      {[0, 1, 2].map((i) => (
+        <div key={i}>
+          <div className="aspect-[4/3] rounded-xl bg-mist" />
+          <div className="mt-4 h-4 w-1/3 rounded bg-mist" />
+          <div className="mt-2 h-6 w-3/4 rounded bg-mist" />
         </div>
       ))}
     </div>
@@ -56,100 +33,52 @@ export default function ItinerariesPage() {
         setLoadError(null);
       })
       .catch((err) => {
-        setLoadError(
-          err instanceof Error ? err.message : "Could not load trip guides."
-        );
+        setLoadError(err instanceof Error ? err.message : "Could not load trip guides.");
         setItineraries([]);
       })
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <main className="pt-32 pb-20">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="text-center">
-          <h1 className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">
-            Explore Trip Guides
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            Get a free taste of each Brazil and Australia guide, then unlock the
-            full route, local tips, and day-by-day plan when you are ready.
-          </p>
+    <main className="text-ink">
+      <section className="pb-8 pt-[calc(var(--nav-height)+2.5rem)] sm:pt-[calc(var(--nav-height)+3.5rem)]">
+        <div className="wrap grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div>
+            <p className="kicker">I&apos;ll do it myself</p>
+            <h1 className="t-h1 mt-2">Self-guided trip guides</h1>
+            <p className="t-lead mt-4 max-w-xl text-dust">
+              Day-by-day plans written from real trips. Brazil first, with Argentina, Peru, Chile, Colombia and Australia alongside. Read the first days of any guide free.
+            </p>
+          </div>
+          <div className="rounded-xl bg-mist p-5">
+            <p className="text-[15px] font-semibold">Rather have it all booked for you?</p>
+            <p className="mt-1 text-[14px] leading-6 text-dust">Vanessa can turn any route into a tailored trip with stays, transfers and support.</p>
+            <Link href="/trips" className="mt-3 inline-block text-[15px] font-semibold text-mar hover:underline">See signature trips</Link>
+          </div>
         </div>
+      </section>
 
-        <div className="mt-14">
-          {loadError && (
-            <div
-              className="mb-8 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-center text-sm text-destructive"
-              role="alert"
-            >
-              {loadError}
+      <section className="pb-20">
+        <div className="wrap">
+          {loadError ? (
+            <div className="mb-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[14px] text-red-800" role="alert">
+              Guides couldn&apos;t load: {loadError}. Refresh the page to try again.
             </div>
-          )}
+          ) : null}
           {loading ? (
             <LoadingSkeleton />
           ) : itineraries.length === 0 && !loadError ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <MapPin className="size-12 text-muted-foreground/50" />
-              <h2 className="mt-4 font-heading text-xl font-semibold">
-                No trip guides available yet
-              </h2>
-              <p className="mt-2 text-muted-foreground">
-                Check back soon!
-              </p>
+            <div className="rounded-xl bg-mist px-6 py-16 text-center">
+              <MapPin className="mx-auto size-8 text-mata/50" aria-hidden />
+              <h2 className="t-h3 mt-4">The first guides are on their way</h2>
+              <p className="mx-auto mt-2 max-w-md text-[15px] text-dust">In the meantime, Vanessa can plan your trip for you.</p>
+              <Link href="/plan" className="mt-4 inline-block text-[15px] font-semibold text-mar hover:underline">Plan a trip</Link>
             </div>
           ) : (
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {itineraries.map((itinerary, i) => (
-                <Card key={itinerary.id} className="overflow-hidden">
-                  <div
-                    className={`h-48 bg-gradient-to-br ${gradients[i % gradients.length]} flex items-end p-4`}
-                  >
-                    <div className="flex flex-wrap gap-1.5">
-                      {itinerary.destinations.map((dest) => (
-                        <Badge
-                          key={dest}
-                          className="bg-white/90 text-foreground"
-                        >
-                          <MapPin className="size-3" />
-                          {dest}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <CardContent className="flex flex-col gap-3 pt-2">
-                    <h3 className="font-heading text-lg font-semibold">
-                      {itinerary.title}
-                    </h3>
-                    <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {plainTextFromHtml(itinerary.description)}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">
-                        <Clock className="size-3" />
-                        {itinerary.duration} Days
-                      </Badge>
-                    </div>
-                    <div className="mt-auto flex items-center justify-between pt-2">
-                      <span className="text-base font-bold text-brazil-blue">
-                        Full guide ${itinerary.price}
-                      </span>
-                      <Button
-                        size="sm"
-                        render={
-                          <Link href={`/itineraries/${itinerary.slug}`} />
-                        }
-                      >
-                        Preview Guide
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <GuideExplorer itineraries={itineraries} />
           )}
         </div>
-      </div>
+      </section>
     </main>
   );
 }

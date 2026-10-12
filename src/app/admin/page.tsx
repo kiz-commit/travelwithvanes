@@ -5,18 +5,22 @@ import Link from "next/link";
 import {
   Home,
   MapPin,
-  ShoppingBag,
+  NotebookPen,
   Video,
   FolderOpen,
   User,
   Settings,
+  Inbox,
+  Plane,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   getAllItineraries,
-  getAllProducts,
+  getAllBlogPosts,
   getAllUGCPosts,
+  getAllTripEnquiries,
+  getAllTripPackages,
 } from "@/lib/firestore";
 
 type StatCardProps = {
@@ -49,13 +53,21 @@ function StatCard({ label, count, href, icon }: StatCardProps) {
 
 export default function AdminDashboardPage() {
   const [itineraryCount, setItineraryCount] = useState<number | null>(null);
-  const [productCount, setProductCount] = useState<number | null>(null);
+  const [blogPostCount, setBlogPostCount] = useState<number | null>(null);
   const [ugcCount, setUgcCount] = useState<number | null>(null);
+  const [newEnquiryCount, setNewEnquiryCount] = useState<number | null>(null);
+  const [tripCount, setTripCount] = useState<number | null>(null);
 
   useEffect(() => {
     getAllItineraries().then((items) => setItineraryCount(items.length));
-    getAllProducts().then((items) => setProductCount(items.length));
+    getAllBlogPosts().then((items) => setBlogPostCount(items.length));
     getAllUGCPosts().then((items) => setUgcCount(items.length));
+    getAllTripEnquiries()
+      .then((items) => setNewEnquiryCount(items.filter((item) => item.status === "new").length))
+      .catch(() => setNewEnquiryCount(0));
+    getAllTripPackages()
+      .then((items) => setTripCount(items.length))
+      .catch(() => setTripCount(0));
   }, []);
 
   return (
@@ -63,6 +75,18 @@ export default function AdminDashboardPage() {
       <h1 className="font-heading text-2xl font-semibold">Dashboard</h1>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <StatCard
+          label="New trip enquiries"
+          count={newEnquiryCount}
+          href="/admin/enquiries"
+          icon={<Inbox className="size-4" />}
+        />
+        <StatCard
+          label="Signature trips"
+          count={tripCount}
+          href="/admin/trips"
+          icon={<Plane className="size-4" />}
+        />
         <Card>
           <CardContent className="flex flex-col gap-3">
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -71,7 +95,7 @@ export default function AdminDashboardPage() {
             </div>
             <p className="text-sm text-muted-foreground">
               Hero, stats, portfolio, services, travel section, quote, CTA, and
-              attention hook.
+              UGC page attention hook.
             </p>
             <Button
               variant="outline"
@@ -143,10 +167,10 @@ export default function AdminDashboardPage() {
           icon={<MapPin className="size-4" />}
         />
         <StatCard
-          label="Products"
-          count={productCount}
-          href="/admin/products"
-          icon={<ShoppingBag className="size-4" />}
+          label="Journal Posts"
+          count={blogPostCount}
+          href="/admin/blog"
+          icon={<NotebookPen className="size-4" />}
         />
         <StatCard
           label="UGC Posts"

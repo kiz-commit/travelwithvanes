@@ -15,6 +15,8 @@ export interface Itinerary {
   price: number;
   duration: number;
   destinations: string[];
+  /** Country name from `DESTINATIONS` (e.g. "Brazil"). Optional for older guides. */
+  country?: string;
   /** Rich text (Tiptap HTML). */
   highlights: string;
   coverImage: string;
@@ -56,6 +58,26 @@ export interface Product {
   images: string[];
   category: string;
   stripeProductId?: string;
+  published: boolean;
+  createdAt: Date;
+}
+
+export type BlogLanguage = "en" | "pt";
+
+export interface BlogPost {
+  id: string;
+  slug: string;
+  titleEn: string;
+  titlePt: string;
+  excerptEn: string;
+  excerptPt: string;
+  contentEn: string;
+  contentPt: string;
+  categoryEn: string;
+  categoryPt: string;
+  coverImage: string;
+  publishedAt: string;
+  featured: boolean;
   published: boolean;
   createdAt: Date;
 }
@@ -179,7 +201,23 @@ export interface HomeTravelBlock {
   label: string;
   title: string;
   body: string;
+  ctaLabel: string;
+  ctaHref: string;
   links: HomeGuideLink[];
+}
+
+export interface HomeCourseHighlight {
+  title: string;
+  copy: string;
+}
+
+export interface HomeCoursesBlock {
+  label: string;
+  title: string;
+  body: string;
+  ctaLabel: string;
+  ctaHref: string;
+  highlights: HomeCourseHighlight[];
 }
 
 export interface HomeTestimonial {
@@ -208,6 +246,7 @@ export interface HomePageSettings {
   ugc: HomeUgcBlock;
   services: HomeServicesBlock;
   travel: HomeTravelBlock;
+  courses: HomeCoursesBlock;
   testimonial: HomeTestimonial;
   finalCta: HomeFinalCta;
   hookMoment: HomeHookMoment;
@@ -244,4 +283,26 @@ export interface SiteSettings {
   footerTagline: string;
   footerBlurb: string;
   socials: AboutSocialLink[];
+}
+
+export type TripEnquiryStatus = "new" | "replied" | "booked" | "closed";
+
+export interface TripEnquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  /** Slug of a signature trip, or "" for a custom trip. */
+  tripSlug: string;
+  tripTitle: string;
+  destinations: string[];
+  travelMonth: string;
+  nights: string;
+  travellers: string;
+  budget: string;
+  interests: string[];
+  message: string;
+  marketingOptIn: boolean;
+  status: TripEnquiryStatus;
+  createdAt: Date;
 }

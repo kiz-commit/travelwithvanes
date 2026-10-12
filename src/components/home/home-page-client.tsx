@@ -2,518 +2,287 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Camera,
-  Clapperboard,
-  MapPin,
-  MessageCircle,
-  Plane,
-  Play,
-  Sparkles,
-  Star,
-} from "lucide-react";
+import { Check, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MediaDisplay } from "@/components/media/media-display";
-import { VideoTile } from "@/components/media/video-tile";
-import { getHomePageSettings, getSiteSettings } from "@/lib/firestore";
+import { Calcadao } from "@/components/layout/calcadao";
+import { SafeImage } from "@/components/media/safe-image";
+import { TripCard } from "@/components/trips/trip-card";
+import { HowItWorks, PlanTripBand, TripFaq } from "@/components/trips/planning-sections";
+import { getHomePageSettings } from "@/lib/firestore";
 import { mergeWithHomePageDefaults } from "@/lib/homepage-defaults";
-import { mergeWithSiteDefaults } from "@/lib/site-defaults";
-import { hasDisplayableMedia } from "@/lib/media-utils";
-import type { HomePageSettings, HomeServiceIcon } from "@/types";
+import { hasDisplayableMedia, isImageUrl } from "@/lib/media-utils";
+import { DESTINATIONS } from "@/lib/destinations";
+import { formatGuidePrice } from "@/lib/pricing";
+import type { TripPackageRecord } from "@/lib/trip-packages";
+import type { HomePageSettings, Itinerary } from "@/types";
 
-const SERVICE_ICONS: Record<
-  HomeServiceIcon,
-  typeof Clapperboard
-> = {
-  clapperboard: Clapperboard,
-  camera: Camera,
-  plane: Plane,
-  sparkles: Sparkles,
-};
+const HERO_FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=2400&q=75";
+const PORTRAIT_FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1643400813604-b3877e0c4db9?auto=format&fit=crop&w=1200&q=75";
 
-const TAG_COLORS = [
-  "bg-[#dff3ff]",
-  "bg-[#fee2e2]",
-  "bg-[#dcfce7]",
-  "bg-[#fef3c7]",
-];
+/** Older saved titles used *asterisks* for an accent — show them as plain text. */
+const plain = (text: string) => text.replace(/\*/g, "");
+
+/** Checks that an uploaded image actually loads (storage can be offline). */
+function useImageOk(url: string | undefined): boolean | null {
+  const [state, setState] = useState<{ url?: string; ok: boolean | null }>({ ok: null });
+  useEffect(() => {
+    if (!url) return;
+    const probe = new Image();
+    probe.onload = () => setState({ url, ok: true });
+    probe.onerror = () => setState({ url, ok: false });
+    probe.src = url;
+  }, [url]);
+  if (!url) return false;
+  return state.url === url ? state.ok : null;
+}
 
 function CtaLink({
   href,
   children,
+  variant = "primary",
   className,
-  variant = "default",
 }: {
   href: string;
   children: React.ReactNode;
+  variant?: "primary" | "creator" | "creator-outline" | "light" | "outline-light";
   className?: string;
-  variant?: "default" | "outline" | "creator" | "creator-outline";
 }) {
-  const external =
-    href.startsWith("mailto:") ||
-    href.startsWith("http://") ||
-    href.startsWith("https://") ||
-    href.startsWith("tel:");
-
-  const buttonVariant =
-    variant === "outline"
-      ? "outline"
-      : variant === "creator"
-        ? "creator"
-        : variant === "creator-outline"
-          ? "creator-outline"
-          : "default";
-
+  const external = /^(mailto:|tel:|https?:)/.test(href);
   return (
-    <Button
-      variant={buttonVariant}
-      size="cta"
-      className={className}
-      render={external ? <a href={href} /> : <Link href={href} />}
-    >
+    <Button variant={variant} size="cta" className={className} render={external ? <a href={href} /> : <Link href={href} />}>
       {children}
     </Button>
   );
 }
 
-function HeroCtaButtons({
-  primaryHref,
-  primaryLabel,
-  secondaryHref,
-  secondaryLabel,
-  showSecondary = true,
-  className,
+function SectionHeading({
+  title,
+  intro,
+  action,
 }: {
-  primaryHref: string;
-  primaryLabel: string;
-  secondaryHref: string;
-  secondaryLabel: string;
-  showSecondary?: boolean;
-  className?: string;
+  title: string;
+  intro?: string;
+  action?: { href: string; label: string };
 }) {
   return (
-    <div className={className}>
-      <CtaLink href={primaryHref} variant="creator">
-        {primaryLabel}
-      </CtaLink>
-      {showSecondary ? (
-        <CtaLink href={secondaryHref} variant="creator-outline">
-          {secondaryLabel}
-        </CtaLink>
+    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between md:gap-10">
+      <div className="max-w-2xl">
+        <h2 className="t-h2 text-ink">{title}</h2>
+        {intro ? <p className="mt-3 text-[16px] leading-7 text-dust">{intro}</p> : null}
+      </div>
+      {action ? (
+        <Link href={action.href} className="shrink-0 text-[15px] font-semibold text-mar underline-offset-4 hover:underline">
+          {action.label}
+        </Link>
       ) : null}
     </div>
   );
 }
 
-type HomePageClientProps = {
-  initialSettings: HomePageSettings;
-  initialEmail: string;
-};
-
 export function HomePageClient({
   initialSettings,
-  initialEmail,
-}: HomePageClientProps) {
+  trips,
+  guides,
+  portraitUrl,
+}: {
+  initialSettings: HomePageSettings;
+  trips: TripPackageRecord[];
+  guides: Itinerary[];
+  portraitUrl?: string;
+}) {
   const [settings, setSettings] = useState(initialSettings);
-  const [email, setEmail] = useState(initialEmail);
-
   useEffect(() => {
-    getHomePageSettings()
-      .then((raw) => setSettings(mergeWithHomePageDefaults(raw)))
-      .catch(() => undefined);
+    getHomePageSettings().then((raw) => setSettings(mergeWithHomePageDefaults(raw))).catch(() => undefined);
   }, []);
 
-  useEffect(() => {
-    getSiteSettings()
-      .then((raw) => setEmail(mergeWithSiteDefaults(raw).email))
-      .catch(() => undefined);
-  }, []);
+  const { hero } = settings;
+  const ownHeroImage =
+    hero.mode !== "gradient" && hero.mediaUrl && hasDisplayableMedia(hero.mediaUrl) && isImageUrl(hero.mediaUrl)
+      ? hero.mediaUrl
+      : undefined;
+  const ownHeroOk = useImageOk(ownHeroImage);
+  const heroImage = ownHeroImage && ownHeroOk ? ownHeroImage : HERO_FALLBACK_IMAGE;
 
-  const hero = settings.hero;
-  const heroMedia = hero.mediaUrl;
-  const heroVideo = hero.videoUrl;
-  const showHeroMedia =
-    hero.mode !== "gradient" &&
-    ((hero.mode === "both" &&
-      hasDisplayableMedia(heroMedia) &&
-      hasDisplayableMedia(heroVideo)) ||
-      (hero.mode !== "both" &&
-        heroMedia &&
-        hasDisplayableMedia(heroMedia)));
-  const ugcTiles = settings.ugc.items;
-  const mediaTiles = ugcTiles.filter(
-    (t) => t.mediaUrl && hasDisplayableMedia(t.mediaUrl)
-  );
-  const hookVideo =
-    settings.hookMoment.backgroundVideoUrl || "/hook-moment-bg.mp4";
+  const featuredTrips = [
+    ...trips.filter((trip) => trip.country === "Brazil"),
+    ...trips.filter((trip) => trip.country !== "Brazil"),
+  ].slice(0, 3);
+  const cheapestGuide = guides.reduce<number | null>((min, guide) => (min === null || guide.price < min ? guide.price : min), null);
+  const guideCount = (name: string) => guides.filter((guide) => guide.country === name).length;
+  const portrait = portraitUrl || ownHeroImage || PORTRAIT_FALLBACK_IMAGE;
 
   return (
     <>
-      <div className="homepage-hook-stage">
-        <section className="relative overflow-hidden bg-[#fffaf4] px-5 pb-4 pt-[6.5rem] sm:pb-14 sm:pt-28 lg:flex lg:h-[100svh] lg:max-h-[100svh] lg:flex-col lg:justify-center lg:pb-8 lg:pt-24">
-          <div className="relative mx-auto w-full max-w-7xl max-lg:flex max-lg:min-h-[calc(100svh-6.5rem)] max-lg:flex-col max-lg:gap-3 lg:grid lg:grid-cols-[1fr_1.02fr] lg:items-center lg:gap-6 xl:gap-8">
-            <div className="order-2 flex flex-col justify-center lg:order-1">
-              <h1 className="max-w-[11ch] font-heading text-[clamp(1.85rem,7.5vw,2.55rem)] font-semibold leading-[0.9] tracking-[-0.03em] text-[#111827] lg:max-w-none lg:text-[clamp(3.6rem,6.8vw,6.6rem)] lg:leading-[0.88]">
-                {hero.title}
-              </h1>
-
-              <p className="mt-4 hidden max-w-xl text-[16px] leading-7 text-[#4b5563] lg:mt-5 lg:block lg:text-[17px]">
-                {hero.subtitleDesktop}
-              </p>
-
-              <HeroCtaButtons
-                primaryHref={hero.primaryCtaHref}
-                primaryLabel={hero.primaryCtaLabel}
-                secondaryHref={hero.secondaryCtaHref}
-                secondaryLabel={hero.secondaryCtaLabel}
-                className="mt-5 hidden flex-col gap-3 lg:mt-6 lg:flex lg:flex-row"
-              />
-            </div>
-
-            <div className="relative order-1 mx-auto w-full max-w-[420px] max-lg:flex max-lg:shrink max-lg:justify-center lg:order-2 lg:mx-0 lg:flex lg:h-[min(80svh,720px)] lg:max-w-none lg:items-center lg:justify-end">
-              <div className="relative mx-auto w-[min(68vw,240px)] sm:w-[min(62vw,280px)] lg:mx-0 lg:aspect-[9/16] lg:h-full lg:w-auto lg:max-w-[430px]">
-                <div className="absolute -left-28 top-10 z-10 hidden w-44 rounded-[2rem] bg-white p-3 shadow-[0_24px_80px_rgba(17,24,39,0.16)] lg:block xl:-left-32">
-                  <div className="aspect-[9/16] rounded-[1.45rem] bg-[#2563eb] p-4 text-white">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">
-                      {hero.hookCardLabel}
-                    </p>
-                    <p className="mt-20 text-2xl font-semibold leading-none">
-                      {hero.hookCardText}
-                    </p>
-                  </div>
-                </div>
-                <div className="h-full rounded-[2.4rem] bg-[#111827] p-3 shadow-[0_30px_100px_rgba(17,24,39,0.26)] sm:p-4">
-                  <div
-                    className={`aspect-[9/16] h-full overflow-hidden rounded-[1.8rem] lg:aspect-auto ${showHeroMedia ? "bg-black" : "bg-[#f97316]"}`}
-                  >
-                    {showHeroMedia && hero.mode === "both" ? (
-                      <VideoTile
-                        url={heroVideo}
-                        posterUrl={heroMedia}
-                        aspectClassName="h-full min-h-0 aspect-auto"
-                        className="h-full w-full rounded-none"
-                        showOverlayText={false}
-                        priority
-                      />
-                    ) : showHeroMedia && hero.mode === "video" ? (
-                      <MediaDisplay
-                        url={heroMedia}
-                        alt="Hero video"
-                        className="h-full w-full"
-                        muted
-                        loop
-                        autoPlay
-                        playsInline
-                        priority
-                      />
-                    ) : showHeroMedia && hero.mode === "image" ? (
-                      <MediaDisplay
-                        url={heroMedia}
-                        alt="Hero image"
-                        className="h-full w-full"
-                        priority
-                      />
-                    ) : (
-                      <div className="flex h-full flex-col justify-between p-5 text-white sm:p-6">
-                        <div className="flex items-center justify-between">
-                          <span className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] backdrop-blur">
-                            {hero.placeholderBadge}
-                          </span>
-                          <Play className="size-9 fill-white rounded-full bg-white/20 p-2" />
-                        </div>
-                        <div>
-                          <p className="text-[13px] font-medium uppercase tracking-[0.14em] text-white/70">
-                            {hero.placeholderBrand}
-                          </p>
-                          <h2 className="mt-3 text-4xl font-semibold leading-[0.92] sm:text-5xl">
-                            {hero.placeholderHeadline}
-                          </h2>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="absolute -bottom-3 right-[-4%] z-20 grid w-[72%] max-w-[260px] gap-2.5 rounded-2xl bg-white p-3 shadow-[0_20px_70px_rgba(17,24,39,0.14)] sm:bottom-3 sm:right-[-6%] sm:w-[68%] sm:max-w-none sm:gap-3 sm:p-4 lg:bottom-[3%] lg:left-[-18%] lg:right-auto lg:w-72">
-                  <div className="flex items-center gap-3">
-                    <div className="grid size-11 place-items-center rounded-full bg-[#0f766e] text-lg font-bold text-white sm:size-12">
-                      V
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[#111827]">
-                        {hero.profileName}
-                      </p>
-                      <p className="text-sm text-[#6b7280]">
-                        {hero.profileRole}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                    {hero.nicheTags.map((tag, i) => (
-                      <span
-                        key={tag}
-                        className={`rounded-xl px-2 py-1.5 text-center text-[11px] font-medium leading-tight sm:px-3 sm:py-2 sm:text-sm ${TAG_COLORS[i % TAG_COLORS.length]}`}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <HeroCtaButtons
-              primaryHref={`mailto:${email}`}
-              primaryLabel="Work With Me"
-              secondaryHref={hero.secondaryCtaHref}
-              secondaryLabel={hero.secondaryCtaLabel}
-              showSecondary={false}
-              className="order-3 mt-auto flex flex-col gap-3 pb-1 pt-2 lg:hidden"
-            />
-          </div>
-
-          <div className="mx-auto w-full max-w-7xl pb-8 pt-2 lg:hidden">
-            <p className="max-w-xl text-[15px] leading-6 text-[#4b5563]">
-              {hero.subtitleMobile}
+      {/* Hero — fits the first screen on a 13" laptop, button always visible */}
+      <section className="relative mt-[var(--nav-height)] flex h-[calc(100svh-var(--nav-height)-3rem)] min-h-[28rem] max-h-[50rem] items-end overflow-hidden bg-floresta text-white">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(11,42,32,0.88)_0%,rgba(11,42,32,0.45)_45%,rgba(11,42,32,0.05)_75%)]" />
+        <div className="wrap relative pb-10 sm:pb-14">
+          <div className="max-w-2xl">
+            <h1 className="t-display">{plain(hero.title)}</h1>
+            <p className="t-lead mt-4 max-w-xl text-white/85">
+              <span className="sm:hidden">{hero.subtitleMobile.split("\n")[0]}</span>
+              <span className="hidden sm:inline">{hero.subtitleDesktop.split("\n").filter(Boolean)[0]}</span>
             </p>
-          </div>
-        </section>
-
-        <section className="border-y border-[#111827]/10 bg-white px-5 py-8">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 md:grid-cols-4">
-            {settings.stats.map((item) => (
-              <div key={item.label}>
-                <p className="text-3xl font-semibold text-[#111827]">
-                  {item.value}
-                </p>
-                <p className="mt-1 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#6b7280]">
-                  {item.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="bg-[#f6fbfe] px-5 py-24">
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#f97316]">
-                  {settings.ugc.label}
-                </p>
-                <h2 className="mt-3 max-w-2xl text-4xl font-semibold tracking-tight text-[#111827] sm:text-5xl">
-                  {settings.ugc.title}
-                </h2>
-              </div>
-              <Link
-                href={settings.ugc.viewAllHref}
-                className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[#2563eb]"
-              >
-                {settings.ugc.viewAllLabel}
-                <ArrowRight className="size-4" />
-              </Link>
-            </div>
-            <div className="columns-1 gap-5 sm:columns-2 lg:columns-4">
-              {mediaTiles.length > 0
-                ? mediaTiles.map((tile) => (
-                    <Link
-                      key={tile.title}
-                      href={tile.href}
-                      className="mb-5 block break-inside-avoid transition hover:-translate-y-1"
-                    >
-                      <VideoTile
-                        url={tile.mediaUrl!}
-                        tag={tile.tag}
-                        title={tile.title}
-                        aspectClassName={tile.aspect || "aspect-[9/16]"}
-                        className="shadow-sm"
-                      />
-                    </Link>
-                  ))
-                : settings.ugc.fallbackTiles.map((tile) => (
-                    <Link
-                      key={tile.title}
-                      href={settings.ugc.viewAllHref}
-                      className={`mb-5 block break-inside-avoid overflow-hidden rounded-2xl ${tile.className} ${tile.height} p-5 text-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl`}
-                    >
-                      <div className="flex h-full flex-col justify-between">
-                        <span className="w-fit rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] backdrop-blur">
-                          {tile.tag}
-                        </span>
-                        <div>
-                          <h3 className="text-2xl font-semibold leading-tight">
-                            {tile.title}
-                          </h3>
-                          <p className="mt-3 text-sm font-medium text-white/75">
-                            {tile.metric}
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+            <div className="mt-7 flex flex-wrap gap-3">
+              <CtaLink href={hero.primaryCtaHref || "/plan"}>{hero.primaryCtaLabel}</CtaLink>
+              <CtaLink href={hero.secondaryCtaHref || "/trips"} variant="outline-light">{hero.secondaryCtaLabel}</CtaLink>
             </div>
           </div>
-        </section>
+        </div>
+        {heroImage === HERO_FALLBACK_IMAGE && hero.placeholderBadge ? (
+          <p className="absolute bottom-3 right-4 hidden text-[12px] text-white/60 md:block">{hero.placeholderBadge}</p>
+        ) : null}
+      </section>
+      <Calcadao />
 
-        <section className="bg-white px-5 py-24">
-          <div className="mx-auto max-w-7xl">
-            <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr]">
-              <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#0f766e]">
-                  {settings.services.label}
-                </p>
-                <h2 className="mt-3 text-4xl font-semibold tracking-tight text-[#111827] sm:text-5xl">
-                  {settings.services.title}
-                </h2>
-                <p className="mt-5 text-lg leading-8 text-[#4b5563]">
-                  {settings.services.body}
-                </p>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {settings.services.items.map((service) => {
-                  const Icon = SERVICE_ICONS[service.icon] ?? Sparkles;
-                  return (
-                    <div
-                      key={service.title}
-                      className="rounded-2xl border border-[#111827]/10 bg-[#fffaf4] p-6"
-                    >
-                      <Icon className="size-7 text-[#2563eb]" />
-                      <h3 className="mt-5 text-xl font-semibold text-[#111827]">
-                        {service.title}
-                      </h3>
-                      <p className="mt-3 leading-7 text-[#4b5563]">
-                        {service.copy}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-[#111827] px-5 py-20 text-white">
-          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-            <div>
-              <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#facc15]">
-                {settings.travel.label}
+      {/* Two ways to travel */}
+      <section className="section pt-10 sm:pt-12">
+        <div className="wrap">
+          <h2 className="sr-only">Two ways to travel with Vanessa</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Link href="/trips" className="group flex flex-col rounded-xl bg-mata p-6 text-white transition-colors hover:bg-floresta sm:p-8">
+              <p className="text-[14px] font-semibold text-maracuja">Plan it for me</p>
+              <h3 className="t-h2 mt-2">Signature trips</h3>
+              <p className="mt-3 max-w-md text-[15px] leading-6 text-white/75">
+                A trip designed around you, with stays, transfers and guides booked, and Vanessa on WhatsApp while you travel.
               </p>
-              <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
-                {settings.travel.title}
-              </h2>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-white/65">
-                {settings.travel.body}
+              <span className="mt-6 text-[15px] font-semibold underline-offset-4 group-hover:underline">
+                See {trips.length} trips
+              </span>
+            </Link>
+            <Link href="/itineraries" className="group flex flex-col rounded-xl bg-mist p-6 text-ink transition-colors hover:bg-[#e2ebe6] sm:p-8">
+              <p className="text-[14px] font-semibold text-mar">I&apos;ll do it myself</p>
+              <h3 className="t-h2 mt-2">Self-guided guides</h3>
+              <p className="mt-3 max-w-md text-[15px] leading-6 text-dust">
+                Day-by-day plans written from real trips, across Brazil, South America and Australia. Read the first days free.
               </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {settings.travel.links.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="flex items-center justify-between rounded-2xl bg-white/10 p-5 font-semibold transition hover:bg-white/15"
-                >
-                  {link.label}
-                  <ArrowRight className="size-4" />
-                </Link>
-              ))}
-            </div>
+              <span className="mt-6 text-[15px] font-semibold text-mar underline-offset-4 group-hover:underline">
+                Browse guides{cheapestGuide ? ` — from ${formatGuidePrice(cheapestGuide)}` : ""}
+              </span>
+            </Link>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="bg-[#fffaf4] px-5 py-24">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="mb-6 flex justify-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className="size-5 fill-[#facc15] text-[#facc15]"
-                />
-              ))}
-            </div>
-            <blockquote className="text-3xl font-semibold leading-tight tracking-tight text-[#111827] sm:text-5xl">
-              {settings.testimonial.quote}
-            </blockquote>
-            <div className="mt-8 flex flex-wrap justify-center gap-3 text-sm font-semibold text-[#31516f]">
-              {settings.testimonial.chips.map((chip) => {
-                const Icon =
-                  /english|portuguese|language/i.test(chip)
-                    ? MessageCircle
-                    : MapPin;
-                return (
-                  <span
-                    key={chip}
-                    className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2"
-                  >
-                    <Icon className="size-4" />
-                    {chip}
-                  </span>
-                );
-              })}
-            </div>
+      {/* Signature trips */}
+      <section className="section pt-0">
+        <div className="wrap">
+          <SectionHeading
+            title="Start from a route Vanessa loves"
+            intro="Every trip is a starting point. Your dates, budget and pace shape the final plan."
+            action={{ href: "/trips", label: `All ${trips.length} trips` }}
+          />
+          <div className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredTrips.map((trip) => <TripCard key={trip.id} trip={trip} />)}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="px-5 py-24">
-          <div className="mx-auto max-w-5xl rounded-[2rem] bg-[#2563eb] p-8 text-white sm:p-12">
-            <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-white/65">
-                  {settings.finalCta.label}
-                </p>
-                <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
-                  {settings.finalCta.title}
-                </h2>
-                <p className="mt-5 max-w-2xl text-lg leading-8 text-white/75">
-                  {settings.finalCta.body}
-                </p>
-              </div>
-              <CtaLink
-                href={settings.finalCta.ctaHref}
-                variant="default"
-                className="bg-white text-[#111827] shadow-[0_16px_40px_rgba(255,255,255,0.2)] hover:bg-[#fef3c7] hover:text-[#111827]"
-              >
-                {settings.finalCta.ctaLabel}
+      {/* How it works */}
+      <section className="section bg-mist">
+        <div className="wrap">
+          <SectionHeading title="How planning with Vanessa works" />
+          <HowItWorks className="mt-8" />
+          <div className="mt-9 flex flex-wrap items-center gap-4">
+            <CtaLink href="/plan">Plan a trip</CtaLink>
+            <p className="text-[14px] text-dust">Free to ask. No payment until you&apos;re happy with the plan.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Meet Vanessa */}
+      <section className="section">
+        <div className="wrap grid items-center gap-10 md:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <SafeImage
+            src={portrait}
+            fallbackSrc={PORTRAIT_FALLBACK_IMAGE}
+            alt=""
+            loading="lazy"
+            className="aspect-[4/5] max-h-[min(34rem,78vh)] w-full rounded-xl object-cover"
+          />
+          <div>
+            <p className="kicker">Meet Vanessa</p>
+            <h2 className="t-h2 mt-2 text-ink">“{plain(settings.testimonial.quote)}”</h2>
+            <p className="mt-4 max-w-xl text-[16px] leading-7 text-dust">
+              Vanessa grew up in Brazil and now splits her life between Brazil and Australia. She plans every trip
+              herself, tests the routes, and only recommends places she&apos;d send her own family.
+            </p>
+            <ul className="mt-6 grid gap-3 text-[15px] text-ink sm:grid-cols-2">
+              {[
+                "Born and raised in Brazil",
+                "Fluent Portuguese and English",
+                "Every trip personally planned",
+                "On WhatsApp while you travel",
+              ].map((point) => (
+                <li key={point} className="flex items-center gap-2.5">
+                  <Check className="size-4 shrink-0 text-mata" aria-hidden />
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <CtaLink href="/about" variant="creator-outline">More about Vanessa</CtaLink>
+              <CtaLink href="/plan" variant="creator">
+                <MessageCircle className="size-4" aria-hidden /> Ask her about your trip
               </CtaLink>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      <div
-        className="homepage-attention-hook fixed inset-0 z-[80] flex items-center justify-center overflow-hidden bg-[#111827] px-5 text-center text-white"
-        aria-hidden="true"
-      >
-        <div className="hook-moment-bg absolute inset-0">
-          <video
-            src={hookVideo}
-            className="hook-moment-bg-image"
-            muted
-            loop
-            autoPlay
-            playsInline
-            preload="auto"
-            aria-hidden="true"
+      {/* Destinations */}
+      <section className="section bg-mist">
+        <div className="wrap">
+          <SectionHeading
+            title="Where to go"
+            intro="Brazil is home. Guides for the rest of South America and Australia are growing."
+            action={{ href: "/itineraries", label: "All guides" }}
           />
-          <div className="absolute inset-0 bg-black/15" />
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+            {DESTINATIONS.map((destination) => {
+              const count = guideCount(destination.name);
+              return (
+                <Link
+                  key={destination.slug}
+                  href={`/itineraries?country=${encodeURIComponent(destination.name)}`}
+                  className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-mata text-white sm:aspect-[16/10]"
+                >
+                  <SafeImage src={destination.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-floresta/80 via-floresta/10 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                    <p className="font-heading text-xl sm:text-2xl">{destination.name}</p>
+                    <p className="mt-0.5 text-[13px] text-white/80">
+                      {destination.focus === "home" ? "Vanessa's home" : destination.region}
+                      {count > 0 ? `, ${count} ${count === 1 ? "guide" : "guides"}` : ""}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
-        <div className="homepage-attention-ring absolute size-[34rem] rounded-full border border-white/10" />
-        <div className="homepage-attention-ring homepage-attention-ring-two absolute size-[22rem] rounded-full border border-[#facc15]/20" />
-        <div className="hook-moment hook-moment-one relative z-10 mx-auto max-w-5xl">
-          <p className="hook-line text-[clamp(3.5rem,13vw,10rem)] font-black uppercase leading-[0.82] tracking-normal drop-shadow-[0_4px_28px_rgba(0,0,0,0.85)]">
-            {settings.hookMoment.line1}
-          </p>
+      </section>
+
+      {/* FAQ */}
+      <section className="section">
+        <div className="wrap grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div>
+            <h2 className="t-h2 text-ink">Questions people ask</h2>
+            <p className="mt-3 max-w-sm text-[16px] leading-7 text-dust">
+              Anything else? Ask it in the{" "}
+              <Link href="/plan" className="font-semibold text-mar underline underline-offset-4">trip planner</Link>{" "}
+              and Vanessa will answer personally.
+            </p>
+          </div>
+          <TripFaq limit={4} />
         </div>
-        <div className="hook-moment hook-moment-two absolute inset-x-5 mx-auto max-w-5xl">
-          <p className="hook-line text-[clamp(2.7rem,9vw,7rem)] font-black uppercase leading-[0.86] tracking-normal text-[#facc15]">
-            {settings.hookMoment.line2}
-          </p>
-        </div>
-        <div className="hook-moment hook-moment-three absolute inset-x-5 mx-auto max-w-5xl">
-          <p className="hook-line hook-line-small mx-auto max-w-3xl text-[clamp(2.8rem,10vw,7rem)] font-black uppercase leading-[0.86] tracking-normal text-[#facc15]">
-            {settings.hookMoment.line3}
-          </p>
-        </div>
-      </div>
+      </section>
+
+      <PlanTripBand title={plain(settings.finalCta.title)} body={settings.finalCta.body} href={settings.finalCta.ctaHref || "/plan"} />
     </>
   );
 }

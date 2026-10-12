@@ -15,7 +15,10 @@ export function SanitizedHtml({
   if (!html?.trim()) return null;
   return (
     <Tag
-      className={cn("prose prose-sm max-w-none", className)}
+      className={cn(
+        "prose prose-sm max-w-none prose-headings:font-heading prose-a:text-cobalt prose-blockquote:border-cobalt",
+        className
+      )}
       dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
     />
   );

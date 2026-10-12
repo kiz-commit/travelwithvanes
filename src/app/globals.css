@@ -11,12 +11,34 @@
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
 
-  --color-brazil-green: #0F766E;
-  --color-brazil-blue: #2563EB;
-  --color-gold: #F6C453;
-  --color-ochre: #31516F;
-  --color-sand: #EAF6FB;
-  --color-sky: #38BDF8;
+  /* Travelwithvanes palette — Rio botanical: white, sea-mist, rainforest
+     green, Atlantic blue, passionfruit yellow (primary action only). */
+  --color-white: #ffffff;
+  --color-mist: #eef3f0;
+  --color-mata: #0e4d3a;
+  --color-mar: #0a6584;
+  --color-maracuja: #f5c33b;
+  --color-floresta: #0b2a20;
+
+  /* Legacy token names, remapped so every page shares the new palette. */
+  --color-linen: #ffffff;
+  --color-paper: #eef3f0;
+  --color-ink: #12241d;
+  --color-clay: #0a6584;
+  --color-olive: #4f6b62;
+  --color-ochre: #b98a1e;
+  --color-espresso: #0b2a20;
+  --color-dust: #56655f;
+  --color-ocean: #0a6584;
+  --color-cobalt: #0e4d3a;
+  --color-sun: #f5c33b;
+
+  --color-brazil-green: #0e4d3a;
+  --color-brazil-blue: #0a6584;
+  --color-gold: #f5c33b;
+  --color-ochre-legacy: #b98a1e;
+  --color-sand: #eef3f0;
+  --color-sky: #f5c33b;
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -57,72 +79,73 @@
 }
 
 :root {
-  --background: #fbfdff;
-  --foreground: #1a1a1a;
+  --background: #ffffff;
+  --foreground: #12241d;
   --card: #ffffff;
-  --card-foreground: #1a1a1a;
+  --card-foreground: #12241d;
   --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
-  --primary: #2563EB;
+  --popover-foreground: #12241d;
+  --primary: #0e4d3a;
   --primary-foreground: #ffffff;
-  --secondary: #EAF6FB;
-  --secondary-foreground: #1a1a1a;
-  --muted: #F2F8FC;
-  --muted-foreground: #607386;
-  --accent: #DFF3FF;
-  --accent-foreground: #123452;
-  --destructive: #dc2626;
-  --border: #DCECF3;
-  --input: #DCECF3;
-  --ring: #38BDF8;
-  --chart-1: #2563EB;
-  --chart-2: #38BDF8;
-  --chart-3: #0F766E;
-  --chart-4: #F6C453;
-  --chart-5: #31516F;
-  --radius: 0.625rem;
-  --sidebar: #F6FBFE;
-  --sidebar-foreground: #1a1a1a;
-  --sidebar-primary: #2563EB;
+  --secondary: #eef3f0;
+  --secondary-foreground: #12241d;
+  --muted: #eef3f0;
+  --muted-foreground: #56655f;
+  --accent: #e3ece7;
+  --accent-foreground: #12241d;
+  --destructive: #b42318;
+  --border: #d9e2dd;
+  --input: #cfd9d4;
+  --ring: #0a6584;
+  --chart-1: #0e4d3a;
+  --chart-2: #0a6584;
+  --chart-3: #4f6b62;
+  --chart-4: #f5c33b;
+  --chart-5: #b98a1e;
+  --radius: 0.5rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #12241d;
+  --sidebar-primary: #0e4d3a;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #EAF6FB;
-  --sidebar-accent-foreground: #1a1a1a;
-  --sidebar-border: #DCECF3;
-  --sidebar-ring: #38BDF8;
+  --sidebar-accent: #eef3f0;
+  --sidebar-accent-foreground: #12241d;
+  --sidebar-border: #d9e2dd;
+  --sidebar-ring: #0a6584;
+  --nav-height: 64px;
 }
 
 .dark {
-  --background: #0f0f0f;
-  --foreground: #f5f0e8;
-  --card: #1a1a1a;
-  --card-foreground: #f5f0e8;
-  --popover: #1a1a1a;
-  --popover-foreground: #f5f0e8;
-  --primary: #60A5FA;
-  --primary-foreground: #0f0f0f;
-  --secondary: #2a2520;
-  --secondary-foreground: #f5f0e8;
-  --muted: #2a2520;
-  --muted-foreground: #a89e90;
-  --accent: #38BDF8;
-  --accent-foreground: #0f0f0f;
+  --background: #12141a;
+  --foreground: #f7f2ea;
+  --card: #1c1e26;
+  --card-foreground: #f7f2ea;
+  --popover: #1c1e26;
+  --popover-foreground: #f7f2ea;
+  --primary: #ff7a5c;
+  --primary-foreground: #12141a;
+  --secondary: #1c1e26;
+  --secondary-foreground: #f7f2ea;
+  --muted: #1c1e26;
+  --muted-foreground: #b7b1a8;
+  --accent: #f5c542;
+  --accent-foreground: #12141a;
   --destructive: #ef4444;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: #38BDF8;
-  --chart-1: #60A5FA;
-  --chart-2: #38BDF8;
-  --chart-3: #0F766E;
-  --chart-4: #F6C453;
-  --chart-5: #93C5FD;
-  --sidebar: #1a1a1a;
-  --sidebar-foreground: #f5f0e8;
-  --sidebar-primary: #60A5FA;
-  --sidebar-primary-foreground: #0f0f0f;
-  --sidebar-accent: #2a2520;
-  --sidebar-accent-foreground: #f5f0e8;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #38BDF8;
+  --border: rgba(247, 242, 234, 0.12);
+  --input: rgba(247, 242, 234, 0.16);
+  --ring: #6d8cff;
+  --chart-1: #ff7a5c;
+  --chart-2: #6d8cff;
+  --chart-3: #3cbc98;
+  --chart-4: #f5c542;
+  --chart-5: #e2a012;
+  --sidebar: #1c1e26;
+  --sidebar-foreground: #f7f2ea;
+  --sidebar-primary: #ff7a5c;
+  --sidebar-primary-foreground: #12141a;
+  --sidebar-accent: #2a2d38;
+  --sidebar-accent-foreground: #f7f2ea;
+  --sidebar-border: rgba(247, 242, 234, 0.12);
+  --sidebar-ring: #6d8cff;
 }
 
 @layer base {
@@ -131,13 +154,113 @@
   }
   body {
     @apply bg-background text-foreground;
+    text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans scroll-smooth;
   }
+  h1,
+  h2,
+  h3,
+  .font-heading {
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    font-stretch: 112%;
+    font-weight: 620;
+    letter-spacing: -0.025em;
+    font-style: normal;
+  }
+  ::selection {
+    background: var(--color-maracuja);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-mar);
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {
+  .paper-grain {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  }
+
+  .stamp-ring {
+    border: 1.5px dashed currentColor;
+  }
+
+  .page-shell {
+    padding-top: calc(var(--nav-height) + 2rem);
+  }
+
+  /* Containers & rhythm sized so a full section fits a ~570px laptop viewport. */
+  .wrap {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 76rem;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .wrap {
+      padding-inline: 2rem;
+    }
+  }
+  .section {
+    padding-block: clamp(3rem, 7vh, 5.5rem);
+  }
+
+  /* Type scale (perfect fourth-ish), viewport-height aware for short laptops. */
+  .t-display {
+    font-size: clamp(2.25rem, min(5.2vw, 8.5vh), 4.25rem);
+    line-height: 1;
+  }
+  .t-h1 {
+    font-size: clamp(2rem, min(4.2vw, 7vh), 3.4rem);
+    line-height: 1.02;
+  }
+  .t-h2 {
+    font-size: clamp(1.6rem, min(3vw, 5.5vh), 2.5rem);
+    line-height: 1.08;
+  }
+  .t-h3 {
+    font-size: clamp(1.15rem, 1.6vw, 1.35rem);
+    line-height: 1.2;
+  }
+  .t-lead {
+    font-size: clamp(1rem, 1.25vw, 1.15rem);
+    line-height: 1.6;
+  }
+  .kicker {
+    color: var(--color-mar);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .page-container {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 80rem;
+    padding-inline: 1.25rem;
+  }
+
+  .section-eyebrow {
+    color: var(--color-mar);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .hero-wash {
+    background: linear-gradient(135deg, #0b2a20 0%, #0e4d3a 64%, #0a6584 100%);
+  }
+
+  .editorial-rule {
+    border-color: color-mix(in srgb, var(--color-ink) 14%, transparent);
+  }
+
+  .soft-shadow {
+    box-shadow: 0 1px 2px rgba(18, 36, 29, 0.06), 0 12px 32px -12px rgba(18, 36, 29, 0.18);
+  }
+
   .homepage-hook-stage {
     animation: homepage-spiral-stage 8.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
     animation-delay: 3s;
@@ -384,5 +507,68 @@
     .homepage-attention-hook {
       display: none;
     }
+  }
+}
+
+/* Rich text from the Tiptap editor (guides, journal). The typography plugin
+   isn't installed, so give the common elements sensible defaults here. */
+@layer components {
+  .rich-text > * + * {
+    margin-top: 0.85em;
+  }
+  .rich-text ul,
+  .rich-text ol {
+    padding-left: 1.25rem;
+  }
+  .rich-text ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  .rich-text ul > li {
+    position: relative;
+    padding-left: 1.4rem;
+  }
+  .rich-text ul > li + li,
+  .rich-text ol > li + li {
+    margin-top: 0.45em;
+  }
+  .rich-text ul > li::before {
+    content: "";
+    position: absolute;
+    left: 0.2rem;
+    top: 0.72em;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--color-mar);
+  }
+  .rich-text ol {
+    list-style: decimal;
+  }
+  .rich-text a {
+    color: var(--color-cobalt);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .rich-text strong {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .rich-text h2,
+  .rich-text h3 {
+    color: var(--color-ink);
+    font-family: var(--font-heading), system-ui, sans-serif;
+    font-stretch: 112%;
+    font-size: 1.25em;
+    font-weight: 620;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-top: 1.4em;
+  }
+  .rich-text img {
+    border-radius: 0.75rem;
+  }
+  .rich-text-title p {
+    margin: 0;
   }
 }

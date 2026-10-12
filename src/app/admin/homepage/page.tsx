@@ -107,8 +107,8 @@ export default function AdminHomePagePage() {
       <div>
         <h1 className="font-heading text-2xl font-semibold">Homepage</h1>
         <p className="text-sm text-muted-foreground">
-          Edit every section of the public home page. For the full UGC portfolio
-          page, use{" "}
+          Edit the public home page in lane order: travel, guides, UGC, then
+          courses. For the full UGC portfolio, use{" "}
           <Link
             href="/admin/ugc"
             className="font-medium text-foreground underline underline-offset-4"
@@ -129,11 +129,13 @@ export default function AdminHomePagePage() {
       <Separator />
       <StatsSection form={form} setForm={setForm} />
       <Separator />
+      <TravelSection form={form} setForm={setForm} />
+      <Separator />
       <PortfolioSection form={form} setForm={setForm} />
       <Separator />
       <ServicesSection form={form} setForm={setForm} />
       <Separator />
-      <TravelSection form={form} setForm={setForm} />
+      <CoursesSection form={form} setForm={setForm} />
       <Separator />
       <TestimonialSection form={form} setForm={setForm} />
       <Separator />
@@ -187,14 +189,14 @@ function HeroSection({ form, setForm }: SectionProps) {
       </Field>
       <Field label="Subtitle (mobile)">
         <Textarea
-          rows={3}
+          rows={5}
           value={h.subtitleMobile}
           onChange={(e) => patch({ subtitleMobile: e.target.value })}
         />
       </Field>
       <Field label="Subtitle (desktop)">
         <Textarea
-          rows={3}
+          rows={5}
           value={h.subtitleDesktop}
           onChange={(e) => patch({ subtitleDesktop: e.target.value })}
         />
@@ -445,10 +447,10 @@ function PortfolioSection({ form, setForm }: SectionProps) {
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="font-heading text-lg font-medium">Portfolio section</h2>
+        <h2 className="font-heading text-lg font-medium">UGC / how I fund it</h2>
         <p className="text-sm text-muted-foreground">
-          Section header plus media tiles. Fallback colour tiles show when no
-          media is uploaded.
+          The third lane: brand work that funds the travel. Fallback colour
+          tiles show when no media is uploaded.
         </p>
       </div>
       <Field label="Section label">
@@ -642,7 +644,7 @@ function ServicesSection({ form, setForm }: SectionProps) {
         <div>
           <h2 className="font-heading text-lg font-medium">Services</h2>
           <p className="text-sm text-muted-foreground">
-            “What brands get” section.
+            UGC offers for brands who want to work with Vanessa.
           </p>
         </div>
         <Button
@@ -780,9 +782,10 @@ function TravelSection({ form, setForm }: SectionProps) {
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="font-heading text-lg font-medium">Travel engine</h2>
+          <h2 className="font-heading text-lg font-medium">Travel & guides</h2>
           <p className="text-sm text-muted-foreground">
-            Dark section with guide links.
+            First lanes on the homepage: the love of travel, then links into
+            the guides.
           </p>
         </div>
         <Button
@@ -826,6 +829,20 @@ function TravelSection({ form, setForm }: SectionProps) {
           onChange={(e) => patch({ body: e.target.value })}
         />
       </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="CTA label">
+          <Input
+            value={form.travel.ctaLabel}
+            onChange={(e) => patch({ ctaLabel: e.target.value })}
+          />
+        </Field>
+        <Field label="CTA link">
+          <Input
+            value={form.travel.ctaHref}
+            onChange={(e) => patch({ ctaHref: e.target.value })}
+          />
+        </Field>
+      </div>
       {form.travel.links.map((link, i) => (
         <div key={i} className="flex gap-2 rounded-lg border p-3">
           <div className="grid flex-1 gap-2 sm:grid-cols-2">
@@ -877,6 +894,144 @@ function TravelSection({ form, setForm }: SectionProps) {
           >
             <Trash2 className="size-3.5" />
           </Button>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function CoursesSection({ form, setForm }: SectionProps) {
+  const patch = (partial: Partial<HomePageSettings["courses"]>) =>
+    setForm((f) =>
+      f ? { ...f, courses: { ...f.courses, ...partial } } : f
+    );
+  const defaultHighlight =
+    DEFAULT_HOME_PAGE_SETTINGS.courses.highlights[0] ?? {
+      title: "",
+      copy: "",
+    };
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="font-heading text-lg font-medium">Courses</h2>
+          <p className="text-sm text-muted-foreground">
+            Financial freedom lane. Links to the public /courses page.
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() =>
+            setForm((f) => {
+              if (!f) return f;
+              return {
+                ...f,
+                courses: {
+                  ...f.courses,
+                  highlights: [
+                    ...f.courses.highlights,
+                    { ...defaultHighlight },
+                  ],
+                },
+              };
+            })
+          }
+        >
+          <Plus className="size-3.5" />
+          Add highlight
+        </Button>
+      </div>
+      <Field label="Section label">
+        <Input
+          value={form.courses.label}
+          onChange={(e) => patch({ label: e.target.value })}
+        />
+      </Field>
+      <Field label="Section title">
+        <Textarea
+          rows={2}
+          value={form.courses.title}
+          onChange={(e) => patch({ title: e.target.value })}
+        />
+      </Field>
+      <Field label="Body">
+        <Textarea
+          rows={3}
+          value={form.courses.body}
+          onChange={(e) => patch({ body: e.target.value })}
+        />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="CTA label">
+          <Input
+            value={form.courses.ctaLabel}
+            onChange={(e) => patch({ ctaLabel: e.target.value })}
+          />
+        </Field>
+        <Field label="CTA link">
+          <Input
+            value={form.courses.ctaHref}
+            onChange={(e) => patch({ ctaHref: e.target.value })}
+          />
+        </Field>
+      </div>
+      {form.courses.highlights.map((item, i) => (
+        <div key={i} className="space-y-2 rounded-lg border p-3">
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() =>
+                setForm((f) => {
+                  if (!f) return f;
+                  return {
+                    ...f,
+                    courses: {
+                      ...f.courses,
+                      highlights: f.courses.highlights.filter(
+                        (_, j) => j !== i
+                      ),
+                    },
+                  };
+                })
+              }
+            >
+              <Trash2 className="size-3.5" />
+            </Button>
+          </div>
+          <Field label="Title">
+            <Input
+              value={item.title}
+              onChange={(e) => {
+                const v = e.target.value;
+                setForm((f) => {
+                  if (!f) return f;
+                  const highlights = [...f.courses.highlights];
+                  highlights[i] = { ...highlights[i]!, title: v };
+                  return { ...f, courses: { ...f.courses, highlights } };
+                });
+              }}
+            />
+          </Field>
+          <Field label="Copy">
+            <Textarea
+              rows={3}
+              value={item.copy}
+              onChange={(e) => {
+                const v = e.target.value;
+                setForm((f) => {
+                  if (!f) return f;
+                  const highlights = [...f.courses.highlights];
+                  highlights[i] = { ...highlights[i]!, copy: v };
+                  return { ...f, courses: { ...f.courses, highlights } };
+                });
+              }}
+            />
+          </Field>
         </div>
       ))}
     </section>
@@ -990,7 +1145,7 @@ function HookMomentSection({ form, setForm }: SectionProps) {
       <div>
         <h2 className="font-heading text-lg font-medium">Attention hook</h2>
         <p className="text-sm text-muted-foreground">
-          Full-screen intro lines and background video.
+          Full-screen intro lines and background video shown on the UGC page.
         </p>
       </div>
       <Field label="Line 1">

@@ -1,19 +1,19 @@
 import { HomePageClient } from "@/components/home/home-page-client";
-import { getHomePageSettings, getSiteSettings } from "@/lib/firestore";
 import {
-  DEFAULT_HOME_PAGE_SETTINGS,
-  mergeWithHomePageDefaults,
-} from "@/lib/homepage-defaults";
-import {
-  DEFAULT_SITE_SETTINGS,
-  mergeWithSiteDefaults,
-} from "@/lib/site-defaults";
+  getAboutPageSettings,
+  getHomePageSettings,
+  getPublishedItineraries,
+} from "@/lib/firestore";
+import { mergeWithHomePageDefaults } from "@/lib/homepage-defaults";
 import {
   hasDisplayableMedia,
   isImageUrl,
   isVideoUrl,
 } from "@/lib/media-utils";
+import { loadPublicTrips } from "@/lib/trips-data";
 import type { HomePageSettings } from "@/types";
+
+export const revalidate = 300;
 
 function getHeroPreloadUrls(hero: HomePageSettings["hero"]): string[] {
   if (hero.mode === "gradient") return [];
@@ -32,21 +32,17 @@ function getHeroPreloadUrls(hero: HomePageSettings["hero"]): string[] {
 }
 
 export default async function Home() {
-  let settings = DEFAULT_HOME_PAGE_SETTINGS;
-  let email = DEFAULT_SITE_SETTINGS.email;
+  const [rawHome, trips, guides, about] = await Promise.all([
+    getHomePageSettings().catch(() => null),
+    loadPublicTrips(),
+    getPublishedItineraries().catch(() => []),
+    getAboutPageSettings().catch(() => null),
+  ]);
 
-  try {
-    const [rawHome, rawSite] = await Promise.all([
-      getHomePageSettings(),
-      getSiteSettings(),
-    ]);
-    settings = mergeWithHomePageDefaults(rawHome);
-    email = mergeWithSiteDefaults(rawSite).email;
-  } catch {
-    settings = mergeWithHomePageDefaults(null);
-  }
-
+  const settings = mergeWithHomePageDefaults(rawHome);
   const preloadUrls = getHeroPreloadUrls(settings.hero);
+  // Hide obvious test entries from the homepage strip.
+  const realGuides = guides.filter((guide) => guide.days.length > 1 && guide.duration > 1);
 
   return (
     <>
@@ -57,7 +53,14 @@ export default async function Home() {
           <link key={url} rel="preload" as="video" href={url} />
         )
       )}
-      <HomePageClient initialSettings={settings} initialEmail={email} />
+      <main>
+        <HomePageClient
+          initialSettings={settings}
+          trips={trips}
+          guides={realGuides}
+          portraitUrl={about?.avatarUrl || undefined}
+        />
+      </main>
     </>
   );
 }

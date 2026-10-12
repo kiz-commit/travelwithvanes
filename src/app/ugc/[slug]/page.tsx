@@ -29,7 +29,7 @@ export default function UGCPostPage() {
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center pt-32">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brazil-blue border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-cobalt border-t-transparent" />
       </main>
     );
   }
@@ -56,7 +56,7 @@ export default function UGCPostPage() {
 
   return (
     <main>
-      <section className="relative flex min-h-[50vh] items-end overflow-hidden bg-gradient-to-br from-[#071f3d] via-brazil-blue to-sky">
+      <section className="relative flex min-h-[50vh] items-end overflow-hidden hero-wash">
         {heroUrl && (
           <div className="absolute inset-0">
             <MediaDisplay
@@ -89,7 +89,7 @@ export default function UGCPostPage() {
 
       <section className="mx-auto max-w-3xl px-4 py-16">
         <div
-          className="prose-like text-lg leading-relaxed text-foreground [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:font-heading [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:mb-5 [&_ul]:mb-5 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:mb-5 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-brazil-blue [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-sky [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_img]:rounded-xl [&_img]:my-6"
+          className="prose-like text-lg leading-relaxed text-foreground [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:font-heading [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:mb-5 [&_ul]:mb-5 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:mb-5 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-cobalt [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-sky [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_img]:rounded-xl [&_img]:my-6"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
       </section>

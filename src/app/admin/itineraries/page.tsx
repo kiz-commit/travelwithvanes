@@ -10,6 +10,8 @@ import {
 } from "@/lib/firestore";
 import { MediaUploadField } from "@/components/admin/media-upload-field";
 import { tryDeleteObjectByUrl } from "@/lib/storage-upload";
+import { STARTER_ITINERARIES } from "@/lib/starter-itineraries";
+import { COUNTRY_OPTIONS } from "@/lib/destinations";
 import type { Itinerary, ItineraryBlockType, ItineraryDay } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +28,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { TiptapEditor } from "@/components/admin/tiptap-editor";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, WandSparkles } from "lucide-react";
 
 type ItineraryFormData = Omit<Itinerary, "id" | "createdAt">;
 
@@ -37,6 +39,7 @@ const emptyForm: ItineraryFormData = {
   price: 0,
   duration: 1,
   destinations: [],
+  country: "Brazil",
   highlights: "",
   coverImage: "",
   gallery: [],
@@ -69,7 +72,9 @@ export default function AdminItinerariesPage() {
   const [itineraries, setItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [seedResult, setSeedResult] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   /** Pre-generated Firestore id for new guides (enables Storage paths before first save) */
@@ -121,6 +126,7 @@ export default function AdminItinerariesPage() {
       price: item.price,
       duration: item.duration,
       destinations: item.destinations,
+      country: item.country ?? "",
       highlights: item.highlights,
       coverImage: item.coverImage,
       gallery: item.gallery,
@@ -165,6 +171,38 @@ export default function AdminItinerariesPage() {
       await fetchItineraries({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete trip guide");
+    }
+  }
+
+  async function addStarterLibrary(publish: boolean) {
+    const existingSlugs = new Set(itineraries.map((item) => item.slug));
+    const missing = STARTER_ITINERARIES.filter((item) => !existingSlugs.has(item.slug));
+    if (missing.length === 0) {
+      setSeedResult("The full starter library is already in Firestore.");
+      return;
+    }
+    const how = publish ? "and publish them on the site" : "as drafts";
+    if (!window.confirm(`Add ${missing.length} starter guides ${how}? Existing guides and your edits will not be changed.`)) return;
+
+    try {
+      setSeeding(true);
+      setError(null);
+      setSeedResult(null);
+      await Promise.all(
+        missing.map((item) =>
+          createItinerary({ ...structuredClone(item), published: publish }, newEntityId("itineraries"))
+        )
+      );
+      setSeedResult(
+        publish
+          ? `Added and published ${missing.length} starter guides. Edit any of them to make them yours, or switch them back to draft.`
+          : `Added ${missing.length} starter guides as drafts. Review, personalise, and publish when ready.`
+      );
+      await fetchItineraries({ silent: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add the starter library");
+    } finally {
+      setSeeding(false);
     }
   }
 
@@ -234,22 +272,37 @@ export default function AdminItinerariesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold">Trip Guides</h1>
           <p className="text-sm text-muted-foreground">
             Manage your paid trip guides and free previews
           </p>
         </div>
-        <Button onClick={openCreate} disabled={loading}>
-          <Plus className="size-4" />
-          Create New Guide
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => void addStarterLibrary(false)} disabled={loading || seeding}>
+            {seeding ? <Loader2 className="size-4 animate-spin" /> : <WandSparkles className="size-4" />}
+            {seeding ? "Adding guides…" : `Add ${STARTER_ITINERARIES.length} starter guides (drafts)`}
+          </Button>
+          <Button variant="outline" onClick={() => void addStarterLibrary(true)} disabled={loading || seeding}>
+            Add &amp; publish
+          </Button>
+          <Button onClick={openCreate} disabled={loading || seeding}>
+            <Plus className="size-4" />
+            Create New Guide
+          </Button>
+        </div>
       </div>
 
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
+        </div>
+      )}
+
+      {seedResult && (
+        <div className="rounded-lg border border-cobalt/20 bg-cobalt/5 px-4 py-3 text-sm text-cobalt">
+          {seedResult}
         </div>
       )}
 
@@ -270,7 +323,7 @@ export default function AdminItinerariesPage() {
             <thead>
               <tr className="border-b bg-muted/50 text-left">
                 <th className="px-4 py-3 font-medium">Title</th>
-                <th className="px-4 py-3 font-medium">Slug</th>
+                <th className="px-4 py-3 font-medium">Country</th>
                 <th className="px-4 py-3 font-medium">Price</th>
                 <th className="px-4 py-3 font-medium">Duration</th>
                 <th className="px-4 py-3 font-medium">Status</th>
@@ -281,7 +334,7 @@ export default function AdminItinerariesPage() {
               {itineraries.map((item) => (
                 <tr key={item.id} className="border-b last:border-0">
                   <td className="px-4 py-3 font-medium">{item.title}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{item.slug}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{item.country || "—"}</td>
                   <td className="px-4 py-3">${item.price}</td>
                   <td className="px-4 py-3">{item.duration} days</td>
                   <td className="px-4 py-3">
@@ -391,7 +444,25 @@ export default function AdminItinerariesPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="destinations">Destinations (comma-separated)</Label>
+              <Label htmlFor="country">Country</Label>
+              <select
+                id="country"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                value={form.country ?? ""}
+                onChange={(e) => updateField("country", e.target.value)}
+              >
+                <option value="">Choose a country…</option>
+                {COUNTRY_OPTIONS.map((country) => (
+                  <option key={country}>{country}</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Groups the guide on the public Guides page. Add new countries in src/lib/destinations.ts.
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="destinations">Places (comma-separated)</Label>
               <Input
                 id="destinations"
                 value={form.destinations.join(", ")}

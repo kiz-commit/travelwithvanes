@@ -1,172 +1,96 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Camera, Video, MapPin, Globe } from "lucide-react";
+import { SafeImage } from "@/components/media/safe-image";
+import { PlanTripBand } from "@/components/trips/planning-sections";
 import { getAboutPageSettings } from "@/lib/firestore";
-import {
-  DEFAULT_ABOUT_PAGE_SETTINGS,
-  mergeWithAboutDefaults,
-} from "@/lib/site-defaults";
 import { hasDisplayableMedia } from "@/lib/media-utils";
-import type { AboutPageSettings } from "@/types";
+import { mergeWithAboutDefaults, realSocialLinks } from "@/lib/site-defaults";
 
-function socialIcon(label: string) {
-  const l = label.toLowerCase();
-  if (l.includes("instagram")) return Camera;
-  return Video;
-}
+export const revalidate = 300;
 
-export default function AboutPage() {
-  const [settings, setSettings] = useState<AboutPageSettings>(
-    DEFAULT_ABOUT_PAGE_SETTINGS
-  );
+export const metadata: Metadata = {
+  title: "About Vanessa",
+  description:
+    "Meet Vanessa — Brazilian-born, Australia-based trip planner and travel creator behind travelwithvanes.",
+};
 
-  useEffect(() => {
-    getAboutPageSettings()
-      .then((raw) => setSettings(mergeWithAboutDefaults(raw)))
-      .catch(() => setSettings(mergeWithAboutDefaults(null)));
-  }, []);
+const FALLBACK_PORTRAIT =
+  "https://images.unsplash.com/photo-1643400813604-b3877e0c4db9?auto=format&fit=crop&w=1200&q=75";
 
-  const showAvatar =
-    settings.avatarUrl && hasDisplayableMedia(settings.avatarUrl);
+export default async function AboutPage() {
+  const settings = mergeWithAboutDefaults(await getAboutPageSettings().catch(() => null));
+  const hasPortrait = Boolean(settings.avatarUrl && hasDisplayableMedia(settings.avatarUrl));
+  const socials = realSocialLinks(settings.socials);
 
   return (
-    <main>
-      <section className="relative flex h-[45vh] min-h-[320px] items-center justify-center overflow-hidden bg-gradient-to-br from-brazil-green to-brazil-blue pt-24">
-        <div className="absolute inset-0 bg-black/30" />
-        <h1 className="relative z-10 font-heading text-5xl font-bold text-white sm:text-6xl">
-          {settings.heroTitle}
-        </h1>
-      </section>
-
-      <section className="mx-auto max-w-5xl px-4 py-20">
-        <div className="flex flex-col items-center gap-12 md:flex-row md:items-start">
-          {showAvatar ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={settings.avatarUrl}
-              alt={settings.name}
-              className="h-[200px] w-[200px] shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <div className="h-[200px] w-[200px] shrink-0 rounded-full bg-gradient-to-br from-sky to-brazil-blue" />
-          )}
-
-          <div className="flex flex-col gap-4 text-center md:text-left">
-            <h2 className="font-heading text-3xl font-bold">{settings.name}</h2>
-            <p className="flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground md:justify-start">
-              <MapPin className="size-4" />
-              {settings.roles}
-            </p>
-            <Separator />
-            <div className="space-y-4 text-base leading-relaxed text-muted-foreground">
-              {settings.bio.map((para) => (
-                <p key={para.slice(0, 32)}>{para}</p>
+    <main className="text-ink">
+      <section className="pb-14 pt-[calc(var(--nav-height)+2.5rem)] sm:pt-[calc(var(--nav-height)+3.5rem)]">
+        <div className="wrap grid items-start gap-10 md:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+          <div>
+            <p className="kicker">About</p>
+            <h1 className="t-h1 mt-2">{settings.heroTitle.replace(/\*/g, "")}</h1>
+            <p className="mt-2 text-[15px] text-dust">{settings.roles}</p>
+            <div className="mt-6 max-w-xl space-y-4 text-[17px] leading-8 text-ink/85">
+              {settings.bio.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            </div>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button variant="primary" size="cta" render={<Link href="/plan" />}>Plan a trip with Vanessa</Button>
+              {socials.map((social) => (
+                <a key={social.label} href={social.href} target="_blank" rel="noopener noreferrer" className="px-2 text-[15px] font-semibold text-mar hover:underline">
+                  {social.label}
+                </a>
               ))}
             </div>
-
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-3 md:justify-start">
-              {settings.socials.map((social) => {
-                const Icon = socialIcon(social.label);
-                return (
-                  <Button
-                    key={social.label}
-                    size="sm"
-                    variant="outline"
-                    render={
-                      <a
-                        href={social.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      />
-                    }
-                  >
-                    <Icon className="size-4" />
-                    {social.label}
-                  </Button>
-                );
-              })}
-            </div>
+          </div>
+          <div className="md:sticky md:top-[calc(var(--nav-height)+1.5rem)]">
+            <SafeImage
+              src={hasPortrait ? settings.avatarUrl : FALLBACK_PORTRAIT}
+              fallbackSrc={FALLBACK_PORTRAIT}
+              alt={hasPortrait ? settings.name : ""}
+              className="aspect-[4/5] max-h-[min(36rem,75vh)] w-full rounded-xl object-cover"
+            />
+            {settings.stats.length > 0 ? (
+              <dl className="mt-4 grid grid-cols-3 gap-3">
+                {settings.stats.slice(0, 3).map((stat) => (
+                  <div key={stat.label} className="flex flex-col-reverse rounded-lg bg-mist p-3 text-center">
+                    <dt className="mt-0.5 text-[12px] text-dust">{stat.label}</dt>
+                    <dd className="font-heading text-lg text-mata">{stat.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
           </div>
         </div>
       </section>
 
-      <section className="bg-muted/40 py-16 px-4">
-        <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-3">
-          {settings.stats.map((stat) => (
-            <Card key={stat.label} className="text-center">
-              <CardContent className="flex flex-col items-center gap-1 py-2">
-                <span className="font-heading text-4xl font-bold text-brazil-blue">
-                  {stat.value}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {stat.label}
-                </span>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-sand py-20 px-4">
-        <div className="mx-auto max-w-4xl">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ochre mb-3">
-              {settings.highlightsLabel}
-            </p>
-            <h2 className="font-heading text-3xl font-bold tracking-tight">
-              {settings.highlightsTitle}
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              {settings.highlightsIntro}
-            </p>
+      <section className="section bg-mist">
+        <div className="wrap grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div>
+            <h2 className="t-h2">{settings.highlightsTitle}</h2>
+            <p className="mt-3 max-w-md text-[16px] leading-7 text-dust">{settings.highlightsIntro}</p>
           </div>
-
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            {settings.highlights.map((highlight) => (
-              <Card key={highlight.slice(0, 40)} className="bg-white/70">
-                <CardContent className="py-5 text-sm leading-relaxed text-muted-foreground">
-                  {highlight}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="mt-10 text-center">
-            <p className="mx-auto max-w-xl text-sm text-muted-foreground">
-              {settings.highlightsOutro}
-            </p>
-            <Button
-              size="lg"
-              className="mt-8 h-12 rounded-full px-8 text-base"
-              render={<Link href={settings.highlightsCtaHref} />}
-            >
-              {settings.highlightsCtaLabel}
-            </Button>
+          <div>
+            <ul className="grid gap-4">
+              {settings.highlights.map((item) => (
+                <li key={item} className="flex gap-3 text-[16px] leading-7">
+                  <Check className="mt-1.5 size-4 shrink-0 text-mata" aria-hidden />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-6 max-w-xl text-[15px] leading-7 text-dust">{settings.highlightsOutro}</p>
+            {settings.highlightsCtaLabel ? (
+              <Link href={settings.highlightsCtaHref || "/trips"} className="mt-4 inline-block text-[15px] font-semibold text-mar hover:underline">
+                {settings.highlightsCtaLabel}
+              </Link>
+            ) : null}
           </div>
         </div>
       </section>
 
-      <section className="py-20 px-4">
-        <div className="mx-auto max-w-2xl text-center">
-          <Globe className="mx-auto size-10 text-brazil-blue" />
-          <h2 className="mt-4 font-heading text-3xl font-bold tracking-tight">
-            {settings.ctaTitle}
-          </h2>
-          <p className="mt-3 text-muted-foreground">{settings.ctaBody}</p>
-          <Button
-            size="lg"
-            className="mt-8 h-12 rounded-full px-8 text-base"
-            render={<Link href={settings.ctaHref} />}
-          >
-            {settings.ctaLabel}
-          </Button>
-        </div>
-      </section>
+      <PlanTripBand title={settings.ctaTitle} body={settings.ctaBody} href={settings.ctaHref || "/plan"} label={settings.ctaLabel || "Plan a trip"} />
     </main>
   );
 }

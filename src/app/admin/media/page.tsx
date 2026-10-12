@@ -42,7 +42,7 @@ export default function AdminMediaPage() {
   }, []);
 
   useEffect(() => {
-    void loadAssets();
+    queueMicrotask(() => void loadAssets());
   }, [loadAssets]);
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -92,7 +92,7 @@ export default function AdminMediaPage() {
           <h1 className="font-heading text-2xl font-semibold">Media library</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Upload photos and videos once, then pick them from any admin page —
-            homepage hero, UGC posts, trip guides, and products all share this library.
+            homepage hero, journal stories, UGC posts, and trip guides all share this library.
           </p>
         </div>
       </div>

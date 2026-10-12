@@ -10,12 +10,14 @@ import { Button } from "@/components/ui/button";
 
 const navLinks = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/enquiries", label: "Enquiries" },
+  { href: "/admin/trips", label: "Trips" },
   { href: "/admin/media", label: "Media" },
   { href: "/admin/homepage", label: "Homepage" },
   { href: "/admin/about", label: "About" },
   { href: "/admin/site", label: "Site" },
   { href: "/admin/itineraries", label: "Trip Guides" },
-  { href: "/admin/products", label: "Products" },
+  { href: "/admin/blog", label: "Journal" },
   { href: "/admin/ugc", label: "UGC" },
 ] as const;
 
@@ -57,7 +59,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="pt-32">
       <nav className="border-b bg-muted/40">
-        <div className="mx-auto flex h-12 max-w-7xl items-center gap-6 px-4">
+        <div className="mx-auto flex min-h-12 max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2">
           <span className="font-heading text-sm font-semibold tracking-wide">
             Admin Dashboard
           </span>
